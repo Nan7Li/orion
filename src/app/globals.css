@@ -3,26 +3,31 @@
 @tailwind utilities;
 
 :root {
-  --background: #f8fafc;
-  --foreground: #090d16;
+  --background: #f6f8fa;
+  --foreground: #0d1117;
+  --card-bg: #ffffff;
+  --card-border: #e1e4e8;
 }
 
 .dark {
-  --background: #090d16;
-  --foreground: #f1f5f9;
+  --background: #0a0d14;
+  --foreground: #f0f6fc;
+  --card-bg: #121721;
+  --card-border: #212838;
 }
 
 body {
   color: var(--foreground);
   background: var(--background);
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
   overflow-x: hidden;
+  letter-spacing: -0.01em;
 }
 
-/* Custom Scrollbar */
+/* Discourse Custom Scrollbar */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 5px;
+  height: 5px;
 }
 
 ::-webkit-scrollbar-track {
@@ -30,12 +35,12 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(156, 163, 175, 0.4);
+  background: rgba(140, 150, 170, 0.3);
   border-radius: 9999px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(156, 163, 175, 0.7);
+  background: rgba(140, 150, 170, 0.6);
 }
 
 .prose-forum pre {

@@ -9,25 +9,25 @@ import { TopicDetail } from '@/components/TopicDetail';
 import { ComposerDrawer } from '@/components/ComposerDrawer';
 import { SearchModal } from '@/components/SearchModal';
 import { UserSwitcherModal } from '@/components/UserSwitcherModal';
-import { Sparkles, Radio } from 'lucide-react';
+import { Radio, Sparkles } from 'lucide-react';
 
 const ForumMain: React.FC = () => {
   const { activeTopicId, setIsComposerOpen } = useForum();
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#fafafc] dark:bg-[#090d16] transition-colors duration-200">
+    <div className="min-h-screen flex flex-col bg-[#f6f8fa] dark:bg-[#0a0d14] transition-colors duration-200">
       <Header />
 
       {/* Community Announcement Broadcast Bar */}
       <div className="bg-gradient-to-r from-indigo-500/10 via-purple-500/10 to-sky-500/10 dark:from-indigo-950/30 dark:via-purple-950/30 dark:to-sky-950/20 border-b border-indigo-500/10 px-4 py-2">
-        <div className="max-w-7xl mx-auto flex items-center justify-between text-xs">
+        <div className="max-w-[1600px] mx-auto flex items-center justify-between text-xs">
           <div className="flex items-center space-x-2 text-zinc-700 dark:text-zinc-300 truncate">
             <Radio className="w-3.5 h-3.5 text-indigo-500 animate-pulse flex-shrink-0" />
             <span className="font-semibold text-indigo-600 dark:text-indigo-400">
               [社区播报]
             </span>
             <span className="truncate">
-              Orion 论坛全面上线：高仿真 Linux.do 风格设计、AI 智能摘要、Markdown 实时交互已就绪！
+              Orion 论坛 2.0 升级上线：支持 Discourse 经典表格流、时间轴、表情互动与 AI 速读！
             </span>
           </div>
 
@@ -41,16 +41,16 @@ const ForumMain: React.FC = () => {
         </div>
       </div>
 
-      {/* Main Forum Content Layout */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        <div className="flex flex-col lg:flex-row gap-8 items-start">
+      {/* Main Forum Content Layout: Left Sidebar + Center/Right Content */}
+      <main className="flex-1 max-w-[1600px] w-full mx-auto px-3 sm:px-6 py-5">
+        <div className="flex gap-6 items-start">
+          {/* Left Sidebar */}
+          <Sidebar />
+
           {/* Main Feed or Topic Detail */}
-          <div className="flex-1 min-w-0 w-full">
+          <div className="flex-1 min-w-0">
             {activeTopicId ? <TopicDetail /> : <TopicList />}
           </div>
-
-          {/* Sidebar */}
-          <Sidebar />
         </div>
       </main>
 

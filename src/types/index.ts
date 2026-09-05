@@ -11,6 +11,9 @@ export interface User {
   joinedAt: string;
   likesReceived: number;
   topicsCount: number;
+  badges?: string[];
+  location?: string;
+  website?: string;
 }
 
 export interface Category {
@@ -24,6 +27,12 @@ export interface Category {
   topicsCount: number;
 }
 
+export interface Reaction {
+  emoji: string;
+  count: number;
+  users: string[]; // user IDs
+}
+
 export interface Reply {
   id: string;
   topicId: string;
@@ -34,6 +43,9 @@ export interface Reply {
   isLiked?: boolean;
   replyToReplyId?: string;
   replyToUser?: string;
+  replyToContent?: string;
+  floorNumber: number;
+  reactions?: Reaction[];
 }
 
 export interface Topic {
@@ -51,10 +63,13 @@ export interface Topic {
   isBookmarked?: boolean;
   isPinned?: boolean;
   isFeatured?: boolean;
+  isClosed?: boolean;
   repliesCount: number;
   participants: User[];
   replies: Reply[];
   aiSummary?: string;
+  reactions?: Reaction[];
 }
 
-export type ViewTab = 'all' | 'latest' | 'top' | 'featured' | 'bookmarks';
+export type ViewTab = 'all' | 'latest' | 'top' | 'featured' | 'bookmarks' | 'unread';
+export type DisplayMode = 'table' | 'card';
