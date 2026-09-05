@@ -143,7 +143,7 @@ export const Sidebar: React.FC = () => {
         <div className="flex items-center justify-between px-1 mb-2">
           <div className="flex items-center space-x-1.5 text-[11px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider">
             <Award className="w-3.5 h-3.5 text-amber-500" />
-            <span>活跃佬友榜</span>
+            <span>星际先锋榜</span>
           </div>
         </div>
         <div className="space-y-2">
@@ -217,7 +217,7 @@ export const Sidebar: React.FC = () => {
         <div className="grid grid-cols-2 gap-1.5 text-center text-xs">
           <div className="bg-white/80 dark:bg-zinc-900/80 p-1.5 rounded-xl border border-zinc-200/50 dark:border-zinc-800/50">
             <div className="font-mono font-bold text-indigo-600 dark:text-indigo-400">1,428</div>
-            <div className="text-[10px] text-zinc-400">在线佬友</div>
+            <div className="text-[10px] text-zinc-400">在轨星友</div>
           </div>
           <div className="bg-white/80 dark:bg-zinc-900/80 p-1.5 rounded-xl border border-zinc-200/50 dark:border-zinc-800/50">
             <div className="font-mono font-bold text-emerald-600 dark:text-emerald-400">36</div>

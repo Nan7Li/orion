@@ -47,11 +47,11 @@ interface ForumContextType {
 const ForumContext = createContext<ForumContextType | undefined>(undefined);
 
 const STORAGE_KEYS = {
-  TOPICS: 'orion_forum_topics_v2',
-  CURRENT_USER: 'orion_forum_current_user_v2',
-  THEME: 'orion_forum_theme_v2',
-  DISPLAY_MODE: 'orion_forum_display_mode_v2',
-  SIDEBAR_COLLAPSED: 'orion_forum_sidebar_v2',
+  TOPICS: 'orion_forum_topics_v3',
+  CURRENT_USER: 'orion_forum_current_user_v3',
+  THEME: 'orion_forum_theme_v3',
+  DISPLAY_MODE: 'orion_forum_display_mode_v3',
+  SIDEBAR_COLLAPSED: 'orion_forum_sidebar_v3',
 };
 
 export const ForumProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -358,7 +358,7 @@ export const ForumProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
     const summary = `【Orion AI 智能速读】
 1. **议题背景**：围绕《${topic.title}》展开深度技术交流，楼主 @${topic.author.name} 分享了实践痛点与方案。
-2. **社区共鸣**：已有 ${topic.replies.length} 位佬友发表了专业见解，提炼出可靠性优先、注重网络与协议边界等关键经验。
+2. **社区共鸣**：已有 ${topic.replies.length} 位星友发表了专业见解，提炼出可靠性优先、注重网络与协议边界等关键经验。
 3. **速览建议**：直接查看文中配置段落，可配合 Docker 与 Linux 内核优化脚本快速上手。`;
 
     setTopics((prev) =>

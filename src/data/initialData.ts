@@ -4,17 +4,17 @@ export const INITIAL_USERS: User[] = [
   {
     id: 'user-neo',
     username: 'neo',
-    name: 'Neo (始皇)',
+    name: 'Neo (星舰引航者)',
     avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
     trustLevel: 4,
-    trustTitle: '始皇 / 社区创始人',
+    trustTitle: '猎户座主权官 / 创世领航员',
     bio: '代码构建宇宙，连接思想与星辰。',
     joinedAt: '2024-01-01',
     likesReceived: 9840,
     topicsCount: 56,
-    badges: ['👑 创世始皇', '🛡️ 全局版主', '🎖️ 核心贡献者'],
-    location: 'Cyber Space',
-    website: 'https://orion.do',
+    badges: ['🪐 创世领航', '🛸 全局主权', '☄️ 核心贡献者'],
+    location: 'Orion Nebula (猎户星云)',
+    website: 'https://orion.nan77a.com',
   },
   {
     id: 'user-cygnus',
@@ -22,12 +22,12 @@ export const INITIAL_USERS: User[] = [
     name: 'Cygnus_极客',
     avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80',
     trustLevel: 3,
-    trustTitle: '核心佬友',
+    trustTitle: '恒星守望者',
     bio: '折腾一切好玩的技术，大模型应用与逆向工程实战中。',
     joinedAt: '2024-02-15',
     likesReceived: 3420,
     topicsCount: 38,
-    badges: ['🌟 核心佬友', '🤖 AI 先锋', '🔥 精华作者'],
+    badges: ['🌟 恒星守望者', '🤖 AI 先锋', '🔥 精华星录'],
     location: '上海',
   },
   {
@@ -36,40 +36,40 @@ export const INITIAL_USERS: User[] = [
     name: 'VortiX_后端',
     avatar: 'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?w=150&auto=format&fit=crop&q=80',
     trustLevel: 3,
-    trustTitle: '核心佬友',
+    trustTitle: '恒星守望者',
     bio: 'Golang / Rust / 分布式高并发系统探索者。',
     joinedAt: '2024-03-10',
     likesReceived: 1890,
     topicsCount: 24,
-    badges: ['🌟 核心佬友', '⚡ 性能怪兽'],
+    badges: ['🌟 恒星守望者', '⚡ 性能怪兽'],
     location: '北京',
   },
   {
     id: 'user-linusfan',
     username: 'linusfan',
-    name: '纯血运维佬',
+    name: '纯血运维漫游者',
     avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80',
     trustLevel: 2,
-    trustTitle: '进阶佬友',
+    trustTitle: '行星领航员',
     bio: 'Debian 精品主义者，VPS 线路评测狂魔与 BBR 调优师。',
     joinedAt: '2024-05-01',
     likesReceived: 820,
     topicsCount: 16,
-    badges: ['🛡️ 进阶佬友', '🐧 Linux 极客'],
+    badges: ['🚀 行星领航员', '🐧 Linux 极客'],
     location: '深圳',
   },
   {
     id: 'user-promptmaster',
     username: 'promptmaster',
-    name: '调优大师',
+    name: '调优漫游者',
     avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&auto=format&fit=crop&q=80',
     trustLevel: 2,
-    trustTitle: '进阶佬友',
+    trustTitle: '行星领航员',
     bio: '研究 Claude 3.7 / DeepSeek-R1 最佳提示词结构与 Agent 工作流。',
     joinedAt: '2024-06-12',
     likesReceived: 670,
     topicsCount: 12,
-    badges: ['🛡️ 进阶佬友', '✨ Prompt 调优师'],
+    badges: ['🚀 行星领航员', '✨ Prompt 调优师'],
   },
   {
     id: 'user-current',
@@ -77,12 +77,12 @@ export const INITIAL_USERS: User[] = [
     name: 'Nan7Li (当前账号)',
     avatar: 'https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?w=150&auto=format&fit=crop&q=80',
     trustLevel: 3,
-    trustTitle: '核心佬友',
-    bio: 'Orion 社区探索者，随时参与讨论与共建。',
+    trustTitle: '恒星守望者',
+    bio: 'Orion 猎户星云探索者，随时参与讨论与共建。',
     joinedAt: '2024-07-20',
     likesReceived: 580,
     topicsCount: 9,
-    badges: ['🌟 核心佬友', '🚀 探索先锋'],
+    badges: ['🌟 恒星守望者', '🚀 探索先锋'],
   },
 ];
 
@@ -90,8 +90,8 @@ export const CATEGORIES: Category[] = [
   {
     id: 'cat-all',
     slug: 'all',
-    name: '全部话题',
-    description: '社区所有精彩话题集合',
+    name: '全部星域',
+    description: '社区全星域精彩话题集合',
     color: '#6366f1',
     bgColor: 'rgba(99, 102, 241, 0.1)',
     topicsCount: 142,
@@ -99,7 +99,7 @@ export const CATEGORIES: Category[] = [
   {
     id: 'cat-tech',
     slug: 'tech',
-    name: '科技杂谈',
+    name: '深空科技',
     description: '前沿硬件、网络拓扑、数码好物、极客折腾记录',
     color: '#0284c7',
     bgColor: 'rgba(2, 132, 199, 0.12)',
@@ -126,7 +126,7 @@ export const CATEGORIES: Category[] = [
   {
     id: 'cat-perks',
     slug: 'perks',
-    name: '福利羊毛',
+    name: '星际补给',
     description: '免费 API 额度、开源公益服务、云厂商优惠券与邀请码',
     color: '#ec4899',
     bgColor: 'rgba(236, 72, 153, 0.12)',
@@ -135,7 +135,7 @@ export const CATEGORIES: Category[] = [
   {
     id: 'cat-resources',
     slug: 'resources',
-    name: '资源荟萃',
+    name: '星图资源',
     description: '开源神器、实用工具脚本、Docker 镜像与效率利器',
     color: '#06b6d4',
     bgColor: 'rgba(6, 182, 212, 0.12)',
@@ -144,7 +144,7 @@ export const CATEGORIES: Category[] = [
   {
     id: 'cat-lounge',
     slug: 'lounge',
-    name: '搞七捻三',
+    name: '星际酒馆',
     description: '生活杂谈、独立开发者日常、摸鱼吹水、思想碰撞',
     color: '#f59e0b',
     bgColor: 'rgba(245, 158, 11, 0.12)',
@@ -153,8 +153,8 @@ export const CATEGORIES: Category[] = [
   {
     id: 'cat-notice',
     slug: 'notice',
-    name: '站务公告',
-    description: 'Orion 社区治理规则、信任等级提升指南、版本迭代通知',
+    name: '星舰通标',
+    description: 'Orion 社区治理规则、宇宙星阶进阶指南、版本迭代通知',
     color: '#ef4444',
     bgColor: 'rgba(239, 68, 68, 0.12)',
     topicsCount: 8,
@@ -177,9 +177,9 @@ export const POPULAR_TAGS = [
 export const INITIAL_TOPICS: Topic[] = [
   {
     id: 'topic-1',
-    title: '【官方公告】欢迎来到 Orion 社区！信任等级机制（Trust Level）与社区公约',
+    title: '【官方星标】欢迎降落 Orion 猎户座社区！宇宙星阶体系（Cosmic Levels）与公约',
     category: CATEGORIES.find((c) => c.slug === 'notice')!,
-    tags: ['社区公约', 'Trust Level', '公告'],
+    tags: ['社区公约', '宇宙星阶', '星舰公告'],
     author: INITIAL_USERS[0], // Neo
     views: 12840,
     likes: 856,
@@ -198,31 +198,31 @@ export const INITIAL_TOPICS: Topic[] = [
       { emoji: '🎉', count: 96, users: ['user-linusfan'] },
     ],
     aiSummary:
-      '本帖为 Orion 社区创始公告，详细阐释了 Orion 的核心理念：真诚交流、拒绝低质灌水、鼓励开源分享。公布了从观察者 (Lv.0) 到始皇认证书童 (Lv.4) 的信任等级晋升阶梯，明确了社区技术讨论与言论边界。',
-    content: `## 🌌 欢迎加入 Orion 开发者星河
+      '本帖为 Orion 社区创始通标，详细阐释了猎户座（Orion）的核心理念：仰望星空、求真务实、自由开源、相互成就。公布了从星尘观测者 (Lv.0) 到猎户座主权官 (Lv.4) 的宇宙星阶晋升体系，明确了社区技术讨论准则。',
+    content: `## 🌌 欢迎加入 Orion 猎户座开发者星河
 
-**Orion** 是一个面向极客、工程师、独立创作者与 AI 探索者的开放技术社区。在这里，我们倡导**求真务实、自由开源、相互成就**的精神。
+**Orion** 是一个面向极客、工程师、独立创作者与 AI 探索者的开放宇宙社区。在这里，我们倡导**求真务实、自由开源、相互成就**的精神。
 
 ---
 
-### 🛡️ 信任等级体系 (Trust Level)
+### 🪐 宇宙星阶体系 (Cosmic Hierarchy)
 
-社区沿用类似 Discourse 的分层自治体系，鼓励持续沉淀优质内容：
+社区告别陈旧等级机制，采用纯正的天体引力进阶体系，鼓励持续沉淀优质内容：
 
-| 等级 | 头衔 | 达成条件 | 核心特权 |
-| :--- | :--- | :--- | :--- |
-| **Lv.0** | 观察者 | 刚注册 | 限制发帖频次，学习社区文化 |
-| **Lv.1** | 萌新佬友 | 浏览5个话题，阅读15分钟 | 解锁日常发帖、评论、点赞 |
-| **Lv.2** | 进阶佬友 | 访问15天，点赞20次，无违规 | 获得邀请码、编辑个人专属标头 |
-| **Lv.3** | 核心佬友 | 连续活跃50天，发布过精华帖 | 话题标签管理、社区共治投票 |
-| **Lv.4** | 始皇认证书童 | 社区特邀 / 核心技术贡献者 | 全局版主特权、技术议程发起人 |
+| 星阶等级 | 天体头衔 | 英文标识 | 达成条件 | 核心特权 |
+| :--- | :--- | :--- | :--- | :--- |
+| **Lv.0** | **星尘观测者** | Stardust Observer | 刚抵达星系 | 观察引力轨道，学习社区文化 |
+| **Lv.1** | **星际漫游者** | Cosmos Voyager | 浏览5个话题，阅读15分钟 | 解锁日常发帖、评论、星标互动 |
+| **Lv.2** | **行星领航员** | Planetary Navigator | 活跃15天，点赞20次，无违规 | 获得跃迁邀请码、编辑个人星际标头 |
+| **Lv.3** | **恒星守望者** | Stellar Warden | 连续在轨50天，发布过精选话题 | 话题标签管理、星域共治投票 |
+| **Lv.4** | **猎户座主权官** | Orion Sovereign | 核心技术贡献者 / 创世领航员 | 全局守护特权、技术议程发起人 |
 
-### 📜 社区基本公约
+### 📜 星舰基本公约
 1. **真诚友善**：技术讨论对事不对人，严禁人身攻击与恶意拉踩。
 2. **拒绝无意义灌水**：请尽量提供上下文和复现步骤，代码请使用 Markdown 语法包裹。
 3. **鼓励原创与开源**：引用外部资料请标明出处，分享开源项目请附带 GitHub 链接。
 
-愿我们在 Orion 的星空下，找到同频的灵魂！🚀`,
+愿我们在 Orion 的浩瀚星海中，找到同频共振的智慧！🚀`,
     replies: [
       {
         id: 'reply-1-1',
@@ -236,8 +236,8 @@ export const INITIAL_TOPICS: Topic[] = [
           { emoji: '❤️', count: 42, users: ['user-neo', 'user-current'] },
           { emoji: '👍', count: 35, users: ['user-vortix'] },
         ],
-        content: `支持始皇！Orion 的界面真的太舒服了，暗色主题的对比度和排版质感完全戳中审美！
-期待在 Orion 认识更多优秀的佬友，今天起常驻！🎉`,
+        content: `支持这个宇宙星阶设定！这才配得上 Orion（猎户座）的名字。深色星空主题的排版对比度与微标质感完全戳中极客审美！
+期待在星海中结识更多同行开拓者！🎉`,
       },
       {
         id: 'reply-1-2',
@@ -248,7 +248,7 @@ export const INITIAL_TOPICS: Topic[] = [
         likes: 42,
         isLiked: false,
         reactions: [{ emoji: '🚀', count: 28, users: ['user-cygnus'] }],
-        content: `前排支持！等级机制非常健康，能有效抵御垃圾广告和脚本号。我已经准备好把最新的分布式网关源码整理发布到开源板块了！`,
+        content: `前排打卡！天体等级机制非常酷，能有效抵御脚本垃圾。我已经准备好把最新的分布式网关源码整理发布到开发调优星区了！`,
       },
       {
         id: 'reply-1-3',
@@ -259,7 +259,7 @@ export const INITIAL_TOPICS: Topic[] = [
         likes: 29,
         isLiked: false,
         reactions: [{ emoji: '💡', count: 18, users: ['user-linusfan'] }],
-        content: `前排打卡！期待 AI 相关的专区讨论，最近 DeepSeek 和新推理模型有很多可玩的地方。`,
+        content: `前排报到！期待 AI 相关的专区讨论，最近 DeepSeek 和新推理模型在本地部署有很多值得深挖的玩法。`,
       },
       {
         id: 'reply-1-4',
@@ -270,7 +270,7 @@ export const INITIAL_TOPICS: Topic[] = [
         likes: 18,
         isLiked: false,
         reactions: [{ emoji: '👍', count: 12, users: ['user-current'] }],
-        content: `顶一下！支持合理的社区规则，老老实实写高质量技术总结的佬友就该受到尊重！`,
+        content: `顶一下！支持合理的社区规则，老老实实写高质量技术总结的开拓者就该受到尊重！`,
       },
     ],
   },
@@ -297,7 +297,7 @@ export const INITIAL_TOPICS: Topic[] = [
     ],
     aiSummary:
       '作者开源了专为现代大语言模型设计的高吞吐网关 Orion-Gateway。核心亮点包括多 Key 轮询容灾、统一 OpenAI 格式转换、零内存拷贝流式转发（TTFT 缩短 40%），并提供了极简的 Docker-compose 部署方案。',
-    content: `各位佬友大家好！最近在折腾多个模型 API（包括 DeepSeek-R1、Claude 3.7 Sonnet、OpenAI o3-mini），发现市面上的中转网关要么太重，要么在高并发流式推理下延迟激增。
+    content: `各位星友大家好！最近在折腾多个模型 API（包括 DeepSeek-R1、Claude 3.7 Sonnet、OpenAI o3-mini），发现市面上的中转网关要么太重，要么在高并发流式推理下延迟激增。
 
 于是利用业余时间基于 Go + Fiber 搓了一个极简、高性能的聚合中转网关：**Orion-Gateway**。
 
@@ -336,7 +336,7 @@ routes:
         weight: 5
 \`\`\`
 
-欢迎大家部署体验，求个 Star ⭐️！任何 Bug 和建议直接在本帖留言！`,
+欢迎各位星友部署体验，求个 Star ⭐️！任何 Bug 和建议直接在本帖留言！`,
     replies: [
       {
         id: 'reply-2-1',
@@ -371,7 +371,7 @@ routes:
         likes: 64,
         isLiked: true,
         reactions: [{ emoji: '🎉', count: 32, users: ['user-current'] }],
-        content: `非常优秀的项目！已安排上主站精选板块。这种专注性能的工具正是社区最推崇的硬核产出。`,
+        content: `非常优秀的项目！已标记进星域精选。这种专注性能的工具正是 Orion 最推崇的硬核产出。`,
       },
     ],
   },
@@ -397,7 +397,7 @@ routes:
     ],
     aiSummary:
       '作者通过真实晚高峰网络测试，深度横评了电信 CN2 GIA、联通 AS9929/4837 以及移动 CMIN2 的真实带宽、丢包率与延迟，并给出了针对不同宽带用户的最具性价比选购组合与 BBR 优化脚本。',
-    content: `不少佬友在建站或跑私有服务时经常被各种“优质线路”忽悠，今天用两周的全国节点晚高峰（20:00 - 23:00）实测数据，为大家做一次硬核脱水总结。
+    content: `不少星友在建站或跑私有服务时经常被各种“优质线路”忽悠，今天用两周的全国节点晚高峰（20:00 - 23:00）实测数据，为大家做一次硬核脱水总结。
 
 ### 1. 三大优质线路现状
 
@@ -454,9 +454,9 @@ sysctl -p
   },
   {
     id: 'topic-4',
-    title: '【福利派送】Orion 开发者体验计划：赠送 100 份 DeepSeek & Claude 逆向兼容 API 体验额度！',
+    title: '【星际补给】Orion 开发者体验计划：赠送 100 份 DeepSeek & Claude 逆向兼容 API 体验额度！',
     category: CATEGORIES.find((c) => c.slug === 'perks')!,
-    tags: ['福利羊毛', 'DeepSeek', 'API中转'],
+    tags: ['星际补给', 'DeepSeek', 'API中转'],
     author: INITIAL_USERS[0], // Neo
     views: 9540,
     likes: 778,
@@ -474,10 +474,10 @@ sysctl -p
       { emoji: '🚀', count: 280, users: ['user-vortix'] },
     ],
     aiSummary:
-      '始皇发起的社区第 1 期福利活动。回帖即可自动发放专属 API Token，内含 $20 美元等值推理额度，支持 DeepSeek-V3 / R1 与 Claude 3.5/3.7，无并发限制。',
-    content: `庆祝 Orion 社区正式上线运行，特地为大家准备了一波纯粹的开发者福利！
+      'Orion 星舰发起的第 1 期福利补给活动。回帖即可自动发放专属 API Token，内含 $20 美元等值推理额度，支持 DeepSeek-V3 / R1 与 Claude 3.5/3.7，无并发限制。',
+    content: `庆祝 Orion 猎户座社区正式上线运行，特地为大家准备了一波纯粹的开发者星际补给！
 
-### 🎁 福利内容
+### 🎁 补给内容
 - **额度**：每个 Token 包含 $20 美元等额算力
 - **支持模型**：
   - \`deepseek-chat\` (V3)
@@ -486,9 +486,9 @@ sysctl -p
 - **速率限制**：60 RPM，支持流式并发
 
 ### 领取方式
-直接在本帖**回复一句你对 Orion 的祝福或你的独立项目介绍**，系统机器人会自动私信或高亮分发您的密钥！
+直接在本帖**回复一句你对 Orion 的祝福或你的独立项目介绍**，系统机器人会自动分发您的专属补给密钥！
 
-> **注意**：禁止脚本多开刷号，仅限 Lv.1 及以上佬友参与。`,
+> **注意**：禁止脚本多开刷号，仅限 Lv.1 星际漫游者及以上星友参与。`,
     replies: [
       {
         id: 'reply-4-1',
@@ -499,7 +499,7 @@ sysctl -p
         likes: 21,
         isLiked: false,
         reactions: [{ emoji: '🎉', count: 12, users: ['user-neo'] }],
-        content: `祝 Orion 越办越好！最近在用 Claude 3.7 重构自己的开源自动化 Agent 框架，正好缺高并发测试额度，感恩始皇！`,
+        content: `祝 Orion 越办越好！最近在用 Claude 3.7 重构自己的开源自动化 Agent 框架，正好缺高并发测试额度，感恩补给！`,
       },
       {
         id: 'reply-4-2',
@@ -510,7 +510,7 @@ sysctl -p
         likes: 15,
         isLiked: false,
         reactions: [{ emoji: '❤️', count: 8, users: ['user-promptmaster'] }],
-        content: `抢前排！祝 Orion 成为国内最有极客精神的纯粹技术自留地！`,
+        content: `抢前排！祝 Orion 成为最具星际极客精神的纯粹技术自留地！`,
       },
       {
         id: 'reply-4-3',
@@ -521,7 +521,7 @@ sysctl -p
         likes: 45,
         isLiked: true,
         reactions: [{ emoji: '🚀', count: 20, users: ['user-current'] }],
-        content: `已为前排回帖的两位佬友下发 Token，请进入个人控制台查收！后面回复的继续有效！`,
+        content: `已为前排回帖的两位星友下发 Token，请进入个人控制台查收！后面回复的继续有效！`,
       },
     ],
   },
@@ -580,7 +580,7 @@ export const revalidate = 60; // 60秒增量静态再生
   },
   {
     id: 'topic-6',
-    title: '【摸鱼杂谈】工作 8 年后，我为什么选择每天下班写 2 小时自己的独立小产品？',
+    title: '【星际杂谈】工作 8 年后，我为什么选择每天下班写 2 小时自己的独立小产品？',
     category: CATEGORIES.find((c) => c.slug === 'lounge')!,
     tags: ['独立开发', '社区公约'],
     author: INITIAL_USERS[4], // PromptMaster
@@ -626,7 +626,7 @@ export const revalidate = 60; // 60秒增量静态再生
         likes: 19,
         isLiked: false,
         reactions: [{ emoji: '❤️', count: 14, users: ['user-current'] }],
-        content: `正是这种纯粹的乐趣！希望 Orion 也能成为独立开发者们互相交流经验、结识伙伴的好地方。`,
+        content: `正是这种纯粹的乐趣！希望 Orion 也能成为开拓者们互相交流经验、结识伙伴的宇宙港湾。`,
       },
     ],
   },

@@ -148,7 +148,7 @@ export const Header: React.FC = () => {
             <div className="flex items-center space-x-2">
               <Search className="w-3.5 h-3.5 text-zinc-400 group-hover:text-indigo-500 transition-colors" />
               <span className="text-zinc-500 dark:text-zinc-400 group-hover:text-zinc-700 dark:group-hover:text-zinc-200">
-                搜索话题、佬友、技术标签...
+                搜索话题、星友、技术标签...
               </span>
             </div>
             <kbd className="hidden sm:inline-flex items-center px-1.5 py-0.5 text-[10px] font-mono rounded border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400 shadow-xs">
@@ -279,7 +279,7 @@ export const Header: React.FC = () => {
                       className="w-full flex items-center space-x-2 px-3 py-2 text-xs rounded-xl hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 transition-colors"
                     >
                       <Users className="w-3.5 h-3.5 text-indigo-500" />
-                      <span>身份切换器 (始皇 / 核心佬友)</span>
+                      <span>星阶身份切换 (主权官 / 恒星守望者)</span>
                     </button>
                     <button
                       onClick={() => {

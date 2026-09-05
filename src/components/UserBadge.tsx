@@ -1,6 +1,6 @@
 import React from 'react';
 import { TrustLevel, User } from '@/types';
-import { Crown, Sparkles, Shield, User as UserIcon } from 'lucide-react';
+import { Sparkles, Orbit, Compass, Rocket, Telescope } from 'lucide-react';
 
 interface UserBadgeProps {
   user: User;
@@ -15,36 +15,41 @@ export const getTrustLevelBadge = (level: TrustLevel) => {
   switch (level) {
     case 4:
       return {
-        label: '始皇认证',
-        icon: Crown,
+        label: '猎户座主权官',
+        subLabel: 'Orion Sovereign',
+        icon: Orbit,
         bg: 'bg-amber-500/10 text-amber-500 border-amber-500/30 dark:bg-amber-400/15 dark:text-amber-300 dark:border-amber-400/30',
         glow: 'shadow-[0_0_12px_rgba(245,158,11,0.25)]',
       };
     case 3:
       return {
-        label: '核心佬友',
+        label: '恒星守望者',
+        subLabel: 'Stellar Warden',
         icon: Sparkles,
         bg: 'bg-purple-500/10 text-purple-500 border-purple-500/30 dark:bg-purple-400/15 dark:text-purple-300 dark:border-purple-400/30',
         glow: 'shadow-[0_0_8px_rgba(168,85,247,0.2)]',
       };
     case 2:
       return {
-        label: '进阶佬友',
-        icon: Shield,
+        label: '行星领航员',
+        subLabel: 'Planetary Navigator',
+        icon: Compass,
         bg: 'bg-emerald-500/10 text-emerald-600 border-emerald-500/30 dark:bg-emerald-400/15 dark:text-emerald-400 dark:border-emerald-400/30',
         glow: '',
       };
     case 1:
       return {
-        label: '萌新佬友',
-        icon: UserIcon,
-        bg: 'bg-blue-500/10 text-blue-600 border-blue-500/30 dark:bg-blue-400/15 dark:text-blue-400 dark:border-blue-400/30',
+        label: '星际漫游者',
+        subLabel: 'Cosmos Voyager',
+        icon: Rocket,
+        bg: 'bg-sky-500/10 text-sky-600 border-sky-500/30 dark:bg-sky-400/15 dark:text-sky-400 dark:border-sky-400/30',
         glow: '',
       };
     default:
       return {
-        label: '观察者',
-        icon: UserIcon,
+        label: '星尘观测者',
+        subLabel: 'Stardust Observer',
+        icon: Telescope,
         bg: 'bg-zinc-500/10 text-zinc-500 border-zinc-500/30 dark:bg-zinc-700/20 dark:text-zinc-400 dark:border-zinc-600/30',
         glow: '',
       };
@@ -88,7 +93,7 @@ export const UserBadge: React.FC<UserBadgeProps> = ({
         {showTrustLevel && (
           <span
             className={`inline-flex items-center space-x-1 text-[11px] px-2 py-0.5 rounded-full border font-medium ${trust.bg} ${trust.glow}`}
-            title={`信任等级: Lv.${user.trustLevel} - ${user.trustTitle}`}
+            title={`宇宙星阶: Lv.${user.trustLevel} · ${trust.label} (${trust.subLabel})`}
           >
             <Icon className="w-3 h-3 flex-shrink-0" />
             <span>Lv.{user.trustLevel} {trust.label}</span>

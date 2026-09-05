@@ -27,10 +27,10 @@ export const UserSwitcherModal: React.FC = () => {
         <div className="flex items-center justify-between px-6 py-4 border-b border-zinc-100 dark:border-zinc-800">
           <div>
             <h3 className="text-base font-bold text-zinc-900 dark:text-white">
-              身份体验切换器 (User Switcher)
+              宇宙星阶体验器 (Cosmic Persona Switcher)
             </h3>
             <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
-              你可以快速切换为不同信任等级的佬友体验权限、发帖与回复互动
+              你可以快速切换为不同天体星阶（猎户座主权官、恒星守望者、行星领航员）体验社区互动
             </p>
           </div>
           <button

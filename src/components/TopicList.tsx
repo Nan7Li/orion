@@ -140,7 +140,7 @@ export const TopicList: React.FC = () => {
             {/* Table Header */}
             <div className="hidden sm:grid grid-cols-12 gap-2 px-4 py-2.5 bg-zinc-50 dark:bg-[#0c1017]/80 border-b border-zinc-200/80 dark:border-zinc-800 text-[11px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider">
               <div className="col-span-7">话题</div>
-              <div className="col-span-2 text-center">参与佬友</div>
+              <div className="col-span-2 text-center">在轨漫游者</div>
               <div className="col-span-1 text-center">回复</div>
               <div className="col-span-1 text-center">浏览</div>
               <div className="col-span-1 text-right">活动</div>
