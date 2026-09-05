@@ -19,6 +19,7 @@ import {
   ArrowLeft,
   Send,
 } from 'lucide-react';
+import { TurnstileWidget } from './TurnstileWidget';
 
 export const AuthModal: React.FC = () => {
   const {
@@ -42,6 +43,9 @@ export const AuthModal: React.FC = () => {
   const [regName, setRegName] = useState('');
   const [regPassword, setRegPassword] = useState('');
   const [regEmail, setRegEmail] = useState('');
+
+  // Turnstile token
+  const [turnstileToken, setTurnstileToken] = useState('');
 
   // Forgot / Reset inputs
   const [forgotEmail, setForgotEmail] = useState('');
@@ -73,14 +77,21 @@ export const AuthModal: React.FC = () => {
     e.preventDefault();
     setErrorMessage(null);
     setSuccessInfo(null);
+
+    if (!turnstileToken) {
+      setErrorMessage('请先完成 Cloudflare 人机安全验证');
+      return;
+    }
+
     setIsLoading(true);
 
     try {
-      const res = await login(loginUsername, loginPassword);
+      const res = await login(loginUsername, loginPassword, turnstileToken);
       if (res.success) {
         setIsAuthModalOpen(false);
         setLoginUsername('');
         setLoginPassword('');
+        setTurnstileToken('');
       } else {
         setErrorMessage(res.error || '登入验证失败');
       }
@@ -93,16 +104,23 @@ export const AuthModal: React.FC = () => {
     e.preventDefault();
     setErrorMessage(null);
     setSuccessInfo(null);
+
+    if (!turnstileToken) {
+      setErrorMessage('请先完成 Cloudflare 人机安全验证');
+      return;
+    }
+
     setIsLoading(true);
 
     try {
-      const res = await register(regUsername, regName, regPassword, regEmail);
+      const res = await register(regUsername, regName, regPassword, regEmail, turnstileToken);
       if (res.success) {
         setIsAuthModalOpen(false);
         setRegUsername('');
         setRegName('');
         setRegPassword('');
         setRegEmail('');
+        setTurnstileToken('');
       } else {
         setErrorMessage(res.error || '注册失败');
       }
@@ -348,9 +366,33 @@ export const AuthModal: React.FC = () => {
                 />
               </div>
 
+              {/* Cloudflare Turnstile Security Verification */}
+              <div className="pt-1">
+                <div className="flex items-center justify-between text-[11px] text-zinc-500 mb-1">
+                  <span className="flex items-center space-x-1 font-semibold text-zinc-700 dark:text-zinc-300">
+                    <ShieldCheck className="w-3.5 h-3.5 text-indigo-500" />
+                    <span>Cloudflare 智能安全防护</span>
+                  </span>
+                  {turnstileToken && (
+                    <span className="text-emerald-500 font-mono text-[10px] flex items-center space-x-1 font-semibold">
+                      <CheckCircle2 className="w-3 h-3" />
+                      <span>已通过人机验证</span>
+                    </span>
+                  )}
+                </div>
+                <TurnstileWidget
+                  key={`login-turnstile-${authModalTab}`}
+                  onVerify={(token) => {
+                    setTurnstileToken(token);
+                    setErrorMessage(null);
+                  }}
+                  onExpire={() => setTurnstileToken('')}
+                />
+              </div>
+
               <button
                 type="submit"
-                disabled={isLoading || !loginUsername.trim() || !loginPassword.trim()}
+                disabled={isLoading || !loginUsername.trim() || !loginPassword.trim() || !turnstileToken}
                 className="w-full py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40 text-white font-bold transition-all shadow-md shadow-indigo-600/30 flex items-center justify-center space-x-2 mt-2"
               >
                 {isLoading ? (
@@ -466,9 +508,33 @@ export const AuthModal: React.FC = () => {
                 <p>完成跃迁即授予【Lv.1 星际漫游者】天体头衔，点亮初始徽章，解锁全星域发帖与表情交互。</p>
               </div>
 
+              {/* Cloudflare Turnstile Anti-Bot Protection */}
+              <div className="pt-1">
+                <div className="flex items-center justify-between text-[11px] text-zinc-500 mb-1">
+                  <span className="flex items-center space-x-1 font-semibold text-zinc-700 dark:text-zinc-300">
+                    <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
+                    <span>Cloudflare 防脚本与防批量注册安全盾</span>
+                  </span>
+                  {turnstileToken && (
+                    <span className="text-emerald-500 font-mono text-[10px] flex items-center space-x-1 font-semibold">
+                      <CheckCircle2 className="w-3 h-3" />
+                      <span>已通过人机验证</span>
+                    </span>
+                  )}
+                </div>
+                <TurnstileWidget
+                  key={`register-turnstile-${authModalTab}`}
+                  onVerify={(token) => {
+                    setTurnstileToken(token);
+                    setErrorMessage(null);
+                  }}
+                  onExpire={() => setTurnstileToken('')}
+                />
+              </div>
+
               <button
                 type="submit"
-                disabled={isLoading || !regUsername.trim() || !regEmail.trim() || regPassword.length < 6}
+                disabled={isLoading || !regUsername.trim() || !regEmail.trim() || regPassword.length < 6 || !turnstileToken}
                 className="w-full py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40 text-white font-bold transition-all shadow-md shadow-indigo-600/30 flex items-center justify-center space-x-2"
               >
                 {isLoading ? (

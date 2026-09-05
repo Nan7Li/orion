@@ -1,3 +1,5 @@
+import { verifyTurnstileToken } from './_turnstile';
+
 interface Env {
   DB: any;
 }
@@ -24,7 +26,17 @@ export const onRequestPost = async (context: { env: Env; request: Request }) => 
   try {
     const { env, request } = context;
     const body: any = await request.json();
-    let { username, name, password, email } = body;
+    let { username, name, password, email, turnstileToken } = body;
+
+    // 1. Cloudflare Turnstile bot verification
+    const remoteIp = request.headers.get('CF-Connecting-IP') || undefined;
+    const turnstileCheck = await verifyTurnstileToken(turnstileToken, remoteIp);
+    if (!turnstileCheck.success) {
+      return new Response(
+        JSON.stringify({ success: false, error: turnstileCheck.error }),
+        { status: 403, headers: CORS_HEADERS }
+      );
+    }
 
     if (!username || !password) {
       return new Response(

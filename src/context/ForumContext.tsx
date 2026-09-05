@@ -28,8 +28,8 @@ interface ForumContextType {
   setIsAuthModalOpen: (open: boolean, tab?: 'login' | 'register' | 'forgot') => void;
   authModalTab: 'login' | 'register' | 'forgot';
   setAuthModalTab: (tab: 'login' | 'register' | 'forgot') => void;
-  login: (username: string, password: string) => Promise<{ success: boolean; error?: string }>;
-  register: (username: string, name: string, password: string, email?: string) => Promise<{ success: boolean; error?: string }>;
+  login: (username: string, password: string, turnstileToken?: string) => Promise<{ success: boolean; error?: string }>;
+  register: (username: string, name: string, password: string, email?: string, turnstileToken?: string) => Promise<{ success: boolean; error?: string }>;
   forgotPassword: (email: string) => Promise<{ success: boolean; message?: string; code?: string; username?: string; name?: string; error?: string }>;
   resetPassword: (email: string, code: string, newPassword: string) => Promise<{ success: boolean; error?: string }>;
   logout: () => void;
@@ -314,12 +314,16 @@ export const ForumProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   }, [theme]);
 
   // Auth: Login
-  const login = async (username: string, password: string): Promise<{ success: boolean; error?: string }> => {
+  const login = async (
+    username: string,
+    password: string,
+    turnstileToken?: string
+  ): Promise<{ success: boolean; error?: string }> => {
     try {
       const res = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password }),
+        body: JSON.stringify({ username, password, turnstileToken }),
       });
       const data = await res.json();
       if (res.ok && data.success && data.user) {
@@ -345,13 +349,14 @@ export const ForumProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     username: string,
     name: string,
     password: string,
-    email?: string
+    email?: string,
+    turnstileToken?: string
   ): Promise<{ success: boolean; error?: string }> => {
     try {
       const res = await fetch('/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, name, password, email }),
+        body: JSON.stringify({ username, name, password, email, turnstileToken }),
       });
       const data = await res.json();
       if (res.ok && data.success && data.user) {
