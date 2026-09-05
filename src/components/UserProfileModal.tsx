@@ -74,7 +74,7 @@ export const UserProfileModal: React.FC = () => {
       : '已达星系至高主权';
 
   const progressPercent =
-    currentLevel === 4 ? 100 : Math.min(95, Math.max(25, (targetUser.likesReceived / 1000) * 100));
+    currentLevel === 4 ? 100 : Math.min(95, Math.max(25, (((targetUser.likesReceived ?? 0) / 1000) * 100)));
 
   const handleSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -177,7 +177,7 @@ export const UserProfileModal: React.FC = () => {
           <div className="flex flex-wrap items-center gap-4 text-xs text-zinc-400 mt-3 pt-2">
             <div className="flex items-center space-x-1">
               <Calendar className="w-3.5 h-3.5" />
-              <span>入轨日期 {targetUser.joinedAt}</span>
+              <span>入轨日期 {targetUser.joinedAt || '2024-01-01'}</span>
             </div>
             {targetUser.location && (
               <div className="flex items-center space-x-1">

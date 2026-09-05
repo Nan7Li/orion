@@ -1,9 +1,10 @@
 'use client';
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import { useForum } from '@/context/ForumContext';
 import { POPULAR_TAGS } from '@/data/initialData';
 import { UserPopover } from './UserPopover';
+import { DailyCheckinCard } from './DailyCheckinCard';
 import {
   Flame,
   Clock,
@@ -16,6 +17,8 @@ import {
   Send,
   Eye,
   Heart,
+  TrendingUp,
+  MessageSquare,
 } from 'lucide-react';
 import { ViewTab } from '@/types';
 
@@ -31,7 +34,14 @@ export const Sidebar: React.FC = () => {
     setActiveTopicId,
     isSidebarCollapsed,
     users,
+    topics,
   } = useForum();
+
+  const trendingTopics = useMemo(() => {
+    return [...topics]
+      .sort((a, b) => (b.views + b.likes * 6 + b.repliesCount * 12) - (a.views + a.likes * 6 + a.repliesCount * 12))
+      .slice(0, 5);
+  }, [topics]);
 
   if (isSidebarCollapsed) {
     return null;
@@ -62,7 +72,7 @@ export const Sidebar: React.FC = () => {
   ];
 
   return (
-    <aside className="w-60 flex-shrink-0 space-y-5 animate-in fade-in slide-in-from-left-4 duration-200">
+    <aside className="w-64 flex-shrink-0 space-y-4 animate-in fade-in slide-in-from-left-4 duration-200">
       {/* 1. Quick Navigation (Discourse Style) */}
       <div className="bg-white dark:bg-[#121721] rounded-2xl border border-zinc-200/80 dark:border-zinc-800 p-2.5 shadow-xs">
         <div className="text-[11px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider px-2.5 py-1">
@@ -99,7 +109,62 @@ export const Sidebar: React.FC = () => {
         </nav>
       </div>
 
-      {/* 2. Categories with Discourse Square Badges */}
+      {/* 2. Daily Cosmic Check-in Widget (Linux.do Culture) */}
+      <DailyCheckinCard />
+
+      {/* 3. 24H Trending / Hot Rankings */}
+      <div className="bg-white dark:bg-[#121721] rounded-2xl border border-zinc-200/80 dark:border-zinc-800 p-3 shadow-xs">
+        <div className="flex items-center justify-between px-1 mb-2.5">
+          <div className="flex items-center space-x-1.5 text-[11px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider">
+            <TrendingUp className="w-3.5 h-3.5 text-orange-500" />
+            <span>24H 全星域飙升</span>
+          </div>
+          <span className="text-[9px] px-1.5 py-0.2 rounded font-mono font-bold text-orange-600 dark:text-orange-400 bg-orange-500/10">
+            HOT 🔥
+          </span>
+        </div>
+        <div className="space-y-2">
+          {trendingTopics.map((topic, idx) => {
+            const rankColors = [
+              'bg-amber-500 text-white shadow-xs',
+              'bg-slate-300 dark:bg-slate-700 text-zinc-800 dark:text-zinc-200',
+              'bg-amber-700 text-white',
+              'text-zinc-400',
+              'text-zinc-400',
+            ];
+            return (
+              <div
+                key={topic.id}
+                onClick={() => setActiveTopicId(topic.id)}
+                className="group flex items-start space-x-2 cursor-pointer p-1 rounded-xl hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-colors"
+              >
+                <span
+                  className={`w-4 h-4 rounded-md text-[10px] font-mono font-bold flex items-center justify-center flex-shrink-0 mt-0.5 ${
+                    rankColors[idx] || 'text-zinc-400'
+                  }`}
+                >
+                  {idx + 1}
+                </span>
+                <div className="min-w-0 flex-1">
+                  <h4 className="text-xs font-medium text-zinc-700 dark:text-zinc-300 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors line-clamp-1 leading-snug">
+                    {topic.title}
+                  </h4>
+                  <div className="flex items-center space-x-2 text-[10px] text-zinc-400 font-mono mt-0.5">
+                    <span>{topic.views > 1000 ? `${(topic.views / 1000).toFixed(1)}k` : topic.views} 阅</span>
+                    <span>·</span>
+                    <span className="flex items-center space-x-0.5 text-sky-500">
+                      <MessageSquare className="w-2.5 h-2.5" />
+                      <span>{topic.repliesCount}</span>
+                    </span>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* 4. Categories with Discourse Square Badges */}
       <div className="bg-white dark:bg-[#121721] rounded-2xl border border-zinc-200/80 dark:border-zinc-800 p-2.5 shadow-xs">
         <div className="flex items-center justify-between px-2.5 py-1">
           <span className="text-[11px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider">
@@ -138,7 +203,7 @@ export const Sidebar: React.FC = () => {
         </div>
       </div>
 
-      {/* 3. Top Active Members (Discourse Leaderboard) */}
+      {/* 5. Top Active Members (Discourse Leaderboard) */}
       <div className="bg-white dark:bg-[#121721] rounded-2xl border border-zinc-200/80 dark:border-zinc-800 p-3 shadow-xs">
         <div className="flex items-center justify-between px-1 mb-2">
           <div className="flex items-center space-x-1.5 text-[11px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider">
@@ -147,18 +212,18 @@ export const Sidebar: React.FC = () => {
           </div>
         </div>
         <div className="space-y-2">
-          {users.slice(0, 4).map((u, idx) => (
+          {users.slice(0, 5).map((u, idx) => (
             <div key={u.id} className="flex items-center justify-between text-xs">
               <UserPopover user={u}>
-                <div className="flex items-center space-x-2">
+                <div className="flex items-center space-x-2 cursor-pointer group">
                   <span className="font-mono text-[10px] font-bold text-zinc-400 w-3">
                     {idx + 1}
                   </span>
-                  <div className="w-5 h-5 rounded-full overflow-hidden border border-zinc-200 dark:border-zinc-700 flex-shrink-0">
+                  <div className="relative w-5 h-5 rounded-full overflow-hidden border border-zinc-200 dark:border-zinc-700 flex-shrink-0">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={u.avatar} alt={u.name} className="w-full h-full object-cover" />
                   </div>
-                  <span className="font-semibold text-zinc-800 dark:text-zinc-200 truncate max-w-[90px]">
+                  <span className="font-semibold text-zinc-800 dark:text-zinc-200 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors truncate max-w-[100px]">
                     {u.name.replace(/ \(.*\)/, '')}
                   </span>
                 </div>
@@ -172,7 +237,7 @@ export const Sidebar: React.FC = () => {
         </div>
       </div>
 
-      {/* 4. Popular Tags Cloud */}
+      {/* 6. Popular Tags Cloud */}
       <div className="bg-white dark:bg-[#121721] rounded-2xl border border-zinc-200/80 dark:border-zinc-800 p-3 shadow-xs">
         <div className="flex items-center justify-between px-1 mb-2">
           <div className="flex items-center space-x-1 text-[11px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider">
@@ -208,7 +273,7 @@ export const Sidebar: React.FC = () => {
         </div>
       </div>
 
-      {/* 5. Live Stats */}
+      {/* 7. Live Stats */}
       <div className="bg-gradient-to-br from-indigo-500/5 via-purple-500/5 to-transparent dark:from-indigo-950/20 dark:via-purple-950/20 rounded-2xl border border-indigo-500/20 p-3 shadow-xs">
         <div className="flex items-center space-x-1.5 text-xs font-bold text-zinc-900 dark:text-zinc-100 mb-2">
           <Activity className="w-3.5 h-3.5 text-indigo-500 animate-pulse" />
@@ -216,12 +281,12 @@ export const Sidebar: React.FC = () => {
         </div>
         <div className="grid grid-cols-2 gap-1.5 text-center text-xs">
           <div className="bg-white/80 dark:bg-zinc-900/80 p-1.5 rounded-xl border border-zinc-200/50 dark:border-zinc-800/50">
-            <div className="font-mono font-bold text-indigo-600 dark:text-indigo-400">1,428</div>
-            <div className="text-[10px] text-zinc-400">在轨星友</div>
+            <div className="font-mono font-bold text-indigo-600 dark:text-indigo-400">486</div>
+            <div className="text-[10px] text-zinc-400">实时在轨</div>
           </div>
           <div className="bg-white/80 dark:bg-zinc-900/80 p-1.5 rounded-xl border border-zinc-200/50 dark:border-zinc-800/50">
-            <div className="font-mono font-bold text-emerald-600 dark:text-emerald-400">36</div>
-            <div className="text-[10px] text-zinc-400">今日主题</div>
+            <div className="font-mono font-bold text-emerald-600 dark:text-emerald-400">{topics.length}</div>
+            <div className="text-[10px] text-zinc-400">讨论议题</div>
           </div>
         </div>
       </div>
@@ -233,10 +298,10 @@ export const Sidebar: React.FC = () => {
           <span>·</span>
           <span className="hover:text-zinc-700 dark:hover:text-zinc-300 cursor-pointer flex items-center space-x-0.5">
             <Send className="w-2.5 h-2.5" />
-            <span>Telegram</span>
+            <span>Telegram 频道</span>
           </span>
         </div>
-        <p>Orion DO · Powered by Discourse Architecture</p>
+        <p>Orion DO · Powered by Cloudflare D1 & Pages</p>
       </div>
     </aside>
   );

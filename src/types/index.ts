@@ -8,9 +8,9 @@ export interface User {
   trustLevel: TrustLevel;
   trustTitle: string;
   bio?: string;
-  joinedAt: string;
-  likesReceived: number;
-  topicsCount: number;
+  joinedAt?: string;
+  likesReceived?: number;
+  topicsCount?: number;
   badges?: string[];
   location?: string;
   website?: string;

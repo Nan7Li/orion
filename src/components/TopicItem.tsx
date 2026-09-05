@@ -11,9 +11,11 @@ interface TopicItemProps {
 }
 
 export const formatRelativeTime = (dateStr: string): string => {
+  if (!dateStr) return '刚刚';
   const now = new Date();
   const date = new Date(dateStr);
   const diffMs = now.getTime() - date.getTime();
+  if (diffMs < 0) return '刚刚';
   const diffSeconds = Math.floor(diffMs / 1000);
   const diffMinutes = Math.floor(diffSeconds / 60);
   const diffHours = Math.floor(diffMinutes / 60);
@@ -22,6 +24,8 @@ export const formatRelativeTime = (dateStr: string): string => {
   if (diffMinutes < 1) return '刚刚';
   if (diffMinutes < 60) return `${diffMinutes} 分钟前`;
   if (diffHours < 24) return `${diffHours} 小时前`;
+  if (diffDays === 1) return '昨天';
+  if (diffDays === 2) return '前天';
   if (diffDays < 30) return `${diffDays} 天前`;
   return date.toLocaleDateString('zh-CN', { month: 'short', day: 'numeric' });
 };

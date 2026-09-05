@@ -5,6 +5,7 @@ import { useForum } from '@/context/ForumContext';
 import { TopicItem, formatRelativeTime } from './TopicItem';
 import { CategoryBadge } from './CategoryBadge';
 import { UserPopover } from './UserPopover';
+import { LiveActivityTicker } from './LiveActivityTicker';
 import { Layers, X, PlusCircle, Filter, Pin, Sparkles } from 'lucide-react';
 import { ViewTab } from '@/types';
 
@@ -109,6 +110,9 @@ export const TopicList: React.FC = () => {
           </button>
         </div>
       )}
+
+      {/* Live Activity & Community Pulse Stream */}
+      <LiveActivityTicker />
 
       {/* Discourse Nav Bar */}
       <div className="flex items-center justify-between pb-1.5 border-b border-zinc-200/80 dark:border-zinc-800">
