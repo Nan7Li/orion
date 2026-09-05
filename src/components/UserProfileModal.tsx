@@ -40,7 +40,7 @@ export const UserProfileModal: React.FC = () => {
   const [isSaving, setIsSaving] = useState(false);
 
   const targetUser = viewingUser || currentUser;
-  const isSelf = targetUser.id === currentUser.id;
+  const isSelf = !!(currentUser && targetUser && targetUser.id === currentUser.id);
 
   useEffect(() => {
     if (targetUser) {
@@ -52,7 +52,7 @@ export const UserProfileModal: React.FC = () => {
     }
   }, [targetUser]);
 
-  if (!viewingUser) return null;
+  if (!viewingUser || !targetUser) return null;
 
   const trust = getTrustLevelBadge(targetUser.trustLevel);
   const TrustIcon = trust.icon;

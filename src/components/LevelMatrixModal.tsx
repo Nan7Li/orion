@@ -97,7 +97,7 @@ export const LevelMatrixModal: React.FC = () => {
           <div className="grid grid-cols-1 gap-3.5">
             {LEVELS.map((lvl) => {
               const Icon = lvl.icon;
-              const isCurrent = currentUser.trustLevel === lvl.level;
+              const isCurrent = currentUser ? currentUser.trustLevel === lvl.level : false;
 
               return (
                 <div

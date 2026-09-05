@@ -43,7 +43,7 @@ export const UserSwitcherModal: React.FC = () => {
 
         <div className="p-4 space-y-2.5 max-h-[65vh] overflow-y-auto">
           {users.map((user) => {
-            const isSelected = currentUser.id === user.id;
+            const isSelected = currentUser?.id === user.id;
             const trust = getTrustLevelBadge(user.trustLevel);
             const TrustIcon = trust.icon;
 

@@ -21,8 +21,16 @@ export interface ForumNotification {
 }
 
 interface ForumContextType {
-  currentUser: User;
-  setCurrentUser: (user: User) => void;
+  currentUser: User | null;
+  setCurrentUser: (user: User | null) => void;
+  isLoggedIn: boolean;
+  isAuthModalOpen: boolean;
+  setIsAuthModalOpen: (open: boolean, tab?: 'login' | 'register') => void;
+  authModalTab: 'login' | 'register';
+  setAuthModalTab: (tab: 'login' | 'register') => void;
+  login: (username: string, password: string) => Promise<{ success: boolean; error?: string }>;
+  register: (username: string, name: string, password: string, email?: string) => Promise<{ success: boolean; error?: string }>;
+  logout: () => void;
   users: User[];
   categories: Category[];
   topics: Topic[];
@@ -81,6 +89,7 @@ const ForumContext = createContext<ForumContextType | undefined>(undefined);
 const STORAGE_KEYS = {
   TOPICS: 'orion_forum_topics_v4',
   CURRENT_USER: 'orion_forum_current_user_v4',
+  AUTH_TOKEN: 'orion_auth_token_v4',
   THEME: 'orion_forum_theme_v4',
   DISPLAY_MODE: 'orion_forum_display_mode_v4',
   SIDEBAR_COLLAPSED: 'orion_forum_sidebar_v4',
@@ -127,7 +136,7 @@ const INITIAL_NOTIFICATIONS: ForumNotification[] = [
 export const ForumProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [users, setUsers] = useState<User[]>(INITIAL_USERS);
   const [categories, setCategories] = useState<Category[]>(CATEGORIES);
-  const [currentUser, setCurrentUser] = useState<User>(INITIAL_USERS[5]); // Nan7Li
+  const [currentUser, setCurrentUser] = useState<User | null>(INITIAL_USERS[5]); // Default logged in as Nan7Li
   const [topics, setTopics] = useState<Topic[]>(INITIAL_TOPICS);
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
@@ -143,6 +152,8 @@ export const ForumProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [isNotificationsOpen, setIsNotificationsOpen] = useState<boolean>(false);
   const [isChatDrawerOpen, setIsChatDrawerOpen] = useState<boolean>(false);
   const [isLevelMatrixOpen, setIsLevelMatrixOpen] = useState<boolean>(false);
+  const [isAuthModalOpen, setIsAuthModalOpenState] = useState<boolean>(false);
+  const [authModalTab, setAuthModalTab] = useState<'login' | 'register'>('login');
   const [viewingUser, setViewingUser] = useState<User | null>(null);
   const [notifications, setNotifications] = useState<ForumNotification[]>(INITIAL_NOTIFICATIONS);
   const [toasts, setToasts] = useState<ToastItem[]>([]);
@@ -160,11 +171,16 @@ export const ForumProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     setToasts((prev) => prev.filter((t) => t.id !== id));
   }, []);
 
+  const setIsAuthModalOpen = useCallback((open: boolean, tab: 'login' | 'register' = 'login') => {
+    setAuthModalTab(tab);
+    setIsAuthModalOpenState(open);
+  }, []);
+
   // Fetch topics from Cloudflare D1
   const fetchD1Topics = useCallback(async (userId?: string) => {
     try {
       setIsLoading(true);
-      const uid = userId || currentUser.id;
+      const uid = userId || (currentUser ? currentUser.id : 'guest');
       const res = await fetch(`/api/topics?userId=${encodeURIComponent(uid)}`);
       if (res.ok) {
         const data = await res.json();
@@ -180,7 +196,7 @@ export const ForumProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     } finally {
       setIsLoading(false);
     }
-  }, [currentUser.id]);
+  }, [currentUser]);
 
   // Fetch users from Cloudflare D1
   const fetchD1Users = useCallback(async () => {
@@ -190,17 +206,18 @@ export const ForumProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         const data = await res.json();
         if (data.success && Array.isArray(data.users) && data.users.length > 0) {
           setUsers(data.users);
-          // Sync current user if present
-          const found = data.users.find((u: User) => u.id === currentUser.id);
-          if (found) {
-            setCurrentUser(found);
+          if (currentUser) {
+            const found = data.users.find((u: User) => u.id === currentUser.id);
+            if (found) {
+              setCurrentUser(found);
+            }
           }
         }
       }
     } catch (e) {
       console.warn('Live D1 users fetch error:', e);
     }
-  }, [currentUser.id]);
+  }, [currentUser]);
 
   // Fetch categories from Cloudflare D1
   const fetchD1Categories = useCallback(async () => {
@@ -215,12 +232,12 @@ export const ForumProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     } catch {}
   }, []);
 
-  // Initial load
+  // Initial load & Session Restoration
   useEffect(() => {
     try {
-      const savedUser = localStorage.getItem(STORAGE_KEYS.CURRENT_USER);
-      if (savedUser) {
-        const parsed = JSON.parse(savedUser);
+      const savedUserStr = localStorage.getItem(STORAGE_KEYS.CURRENT_USER);
+      if (savedUserStr) {
+        const parsed = JSON.parse(savedUserStr);
         if (parsed && parsed.id) setCurrentUser(parsed);
       }
 
@@ -252,6 +269,22 @@ export const ForumProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     fetchD1Topics();
     fetchD1Users();
     fetchD1Categories();
+
+    // Check token with /api/auth/me
+    const token = localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN);
+    if (token) {
+      fetch('/api/auth/me', {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+        .then((r) => r.json())
+        .then((d) => {
+          if (d.success && d.user) {
+            setCurrentUser(d.user);
+            localStorage.setItem(STORAGE_KEYS.CURRENT_USER, JSON.stringify(d.user));
+          }
+        })
+        .catch(() => {});
+    }
   }, [fetchD1Topics, fetchD1Users, fetchD1Categories]);
 
   // Sync URL with active topic
@@ -278,14 +311,91 @@ export const ForumProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     localStorage.setItem(STORAGE_KEYS.THEME, theme);
   }, [theme]);
 
+  // Auth: Login
+  const login = async (username: string, password: string): Promise<{ success: boolean; error?: string }> => {
+    try {
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password }),
+      });
+      const data = await res.json();
+      if (res.ok && data.success && data.user) {
+        setCurrentUser(data.user);
+        try {
+          localStorage.setItem(STORAGE_KEYS.CURRENT_USER, JSON.stringify(data.user));
+          if (data.token) localStorage.setItem(STORAGE_KEYS.AUTH_TOKEN, data.token);
+        } catch {}
+        showToast(data.message || `🌌 欢迎登入，${data.user.name}！`, 'success');
+        fetchD1Topics(data.user.id);
+        return { success: true };
+      } else {
+        return { success: false, error: data.error || '登入失败' };
+      }
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : '网络连接失败';
+      return { success: false, error: msg };
+    }
+  };
+
+  // Auth: Register
+  const register = async (
+    username: string,
+    name: string,
+    password: string,
+    email?: string
+  ): Promise<{ success: boolean; error?: string }> => {
+    try {
+      const res = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, name, password, email }),
+      });
+      const data = await res.json();
+      if (res.ok && data.success && data.user) {
+        setCurrentUser(data.user);
+        setUsers((prev) => [data.user, ...prev]);
+        try {
+          localStorage.setItem(STORAGE_KEYS.CURRENT_USER, JSON.stringify(data.user));
+          if (data.token) localStorage.setItem(STORAGE_KEYS.AUTH_TOKEN, data.token);
+        } catch {}
+        showToast(data.message || `🚀 跃迁成功！欢迎加入猎户座星系，${data.user.name}！`, 'success');
+        fetchD1Topics(data.user.id);
+        return { success: true };
+      } else {
+        return { success: false, error: data.error || '注册失败' };
+      }
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : '网络连接失败';
+      return { success: false, error: msg };
+    }
+  };
+
+  // Auth: Logout
+  const logout = () => {
+    setCurrentUser(null);
+    try {
+      localStorage.removeItem(STORAGE_KEYS.CURRENT_USER);
+      localStorage.removeItem(STORAGE_KEYS.AUTH_TOKEN);
+    } catch {}
+    showToast('🛰️ 已安全断开星际通行证连接，转入星尘观测者浏览模式', 'info');
+    fetchD1Topics('guest');
+  };
+
   // User switcher
-  const handleSetCurrentUser = (user: User) => {
+  const handleSetCurrentUser = (user: User | null) => {
     setCurrentUser(user);
     try {
-      localStorage.setItem(STORAGE_KEYS.CURRENT_USER, JSON.stringify(user));
+      if (user) {
+        localStorage.setItem(STORAGE_KEYS.CURRENT_USER, JSON.stringify(user));
+        showToast(`🌌 已切换星舰身份：${user.name} (${user.trustTitle})`, 'info');
+        fetchD1Topics(user.id);
+      } else {
+        localStorage.removeItem(STORAGE_KEYS.CURRENT_USER);
+        showToast(`已切换为游客模式`, 'info');
+        fetchD1Topics('guest');
+      }
     } catch {}
-    fetchD1Topics(user.id);
-    showToast(`🌌 已跃迁为星舰身份：${user.name} (${user.trustTitle})`, 'info');
   };
 
   const handleSetDisplayMode = (mode: DisplayMode) => {
@@ -335,6 +445,12 @@ export const ForumProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     tags: string[],
     content: string
   ): Topic => {
+    if (!currentUser) {
+      showToast('🪐 请先登入星际通行证以发布星轨议题', 'warning');
+      setIsAuthModalOpen(true, 'login');
+      return {} as Topic;
+    }
+
     const cat = categories.find((c) => c.slug === categorySlug) || categories[1];
     const now = new Date().toISOString();
     const tempId = `topic-${Date.now()}`;
@@ -396,6 +512,12 @@ export const ForumProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     replyToUser?: string,
     replyToContent?: string
   ) => {
+    if (!currentUser) {
+      showToast('🪐 请先登入星际通行证以发表回帖', 'warning');
+      setIsAuthModalOpen(true, 'login');
+      return;
+    }
+
     const now = new Date().toISOString();
     const tempReplyId = `reply-${Date.now()}`;
 
@@ -469,6 +591,12 @@ export const ForumProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   // Real Toggle Like Topic
   const toggleLikeTopic = async (topicId: string) => {
+    if (!currentUser) {
+      showToast('🪐 请先登入星际通行证以点赞', 'warning');
+      setIsAuthModalOpen(true, 'login');
+      return;
+    }
+
     setTopics((prev) =>
       prev.map((t) => {
         if (t.id === topicId) {
@@ -504,6 +632,12 @@ export const ForumProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   // Real Toggle Bookmark
   const toggleBookmarkTopic = async (topicId: string) => {
+    if (!currentUser) {
+      showToast('🪐 请先登入以使用书签收藏', 'warning');
+      setIsAuthModalOpen(true, 'login');
+      return;
+    }
+
     setTopics((prev) =>
       prev.map((t) => (t.id === topicId ? { ...t, isBookmarked: !t.isBookmarked } : t))
     );
@@ -527,6 +661,12 @@ export const ForumProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   // Real Toggle Like Reply
   const toggleLikeReply = async (topicId: string, replyId: string) => {
+    if (!currentUser) {
+      showToast('🪐 请先登入以点赞回复', 'warning');
+      setIsAuthModalOpen(true, 'login');
+      return;
+    }
+
     setTopics((prev) =>
       prev.map((t) => {
         if (t.id === topicId) {
@@ -562,6 +702,12 @@ export const ForumProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   // Real Toggle Reaction Topic
   const toggleReactionTopic = async (topicId: string, emoji: string) => {
+    if (!currentUser) {
+      showToast('🪐 请先登入以添加表情交互', 'warning');
+      setIsAuthModalOpen(true, 'login');
+      return;
+    }
+
     setTopics((prev) =>
       prev.map((t) => {
         if (t.id === topicId) {
@@ -612,6 +758,12 @@ export const ForumProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   // Real Toggle Reaction Reply
   const toggleReactionReply = async (topicId: string, replyId: string, emoji: string) => {
+    if (!currentUser) {
+      showToast('🪐 请先登入以添加表情交互', 'warning');
+      setIsAuthModalOpen(true, 'login');
+      return;
+    }
+
     setTopics((prev) =>
       prev.map((t) => {
         if (t.id === topicId) {
@@ -678,6 +830,7 @@ export const ForumProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   // Update user profile in D1
   const updateUserProfile = async (updates: Partial<User>) => {
+    if (!currentUser) return;
     const updated = { ...currentUser, ...updates };
     setCurrentUser(updated);
     try {
@@ -788,6 +941,14 @@ export const ForumProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       value={{
         currentUser,
         setCurrentUser: handleSetCurrentUser,
+        isLoggedIn: !!currentUser,
+        isAuthModalOpen,
+        setIsAuthModalOpen,
+        authModalTab,
+        setAuthModalTab,
+        login,
+        register,
+        logout,
         users,
         categories,
         topics,

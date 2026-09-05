@@ -20,6 +20,9 @@ import {
   MessageSquare,
   RotateCw,
   Award,
+  LogOut,
+  LogIn,
+  UserPlus,
 } from 'lucide-react';
 
 export const Header: React.FC = () => {
@@ -37,6 +40,8 @@ export const Header: React.FC = () => {
     setIsNotificationsOpen,
     setIsChatDrawerOpen,
     setIsLevelMatrixOpen,
+    setIsAuthModalOpen,
+    logout,
     setViewingUser,
     setActiveTopicId,
     setSelectedCategory,
@@ -50,13 +55,21 @@ export const Header: React.FC = () => {
   const [showCategoryMenu, setShowCategoryMenu] = useState(false);
   const [showUserDropdown, setShowUserDropdown] = useState(false);
 
-  const trust = getTrustLevelBadge(currentUser.trustLevel);
-  const TrustIcon = trust.icon;
+  const trust = currentUser ? getTrustLevelBadge(currentUser.trustLevel) : null;
+  const TrustIcon = trust ? trust.icon : null;
   const unreadCount = notifications.filter((n) => !n.isRead).length;
 
   const handleLogoClick = () => {
     setActiveTopicId(null);
     setSelectedCategory('all');
+  };
+
+  const handleNewTopicClick = () => {
+    if (!currentUser) {
+      setIsAuthModalOpen(true, 'login');
+    } else {
+      setIsComposerOpen(true);
+    }
   };
 
   return (
@@ -207,7 +220,7 @@ export const Header: React.FC = () => {
 
           {/* New Topic Button */}
           <button
-            onClick={() => setIsComposerOpen(true)}
+            onClick={handleNewTopicClick}
             className="flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold shadow-sm shadow-indigo-600/30 hover:scale-[1.02] active:scale-[0.98] transition-all"
           >
             <Plus className="w-3.5 h-3.5" />
@@ -252,93 +265,129 @@ export const Header: React.FC = () => {
             )}
           </button>
 
-          {/* User Profile */}
-          <div className="relative">
-            <button
-              onClick={() => setShowUserDropdown(!showUserDropdown)}
-              className="flex items-center space-x-1.5 p-0.5 pl-1 pr-1.5 rounded-xl border border-zinc-200 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700 transition-colors"
-            >
-              <div className="relative w-7 h-7 rounded-full overflow-hidden ring-2 ring-indigo-500/40">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={currentUser.avatar}
-                  alt={currentUser.name}
-                  className="w-full h-full object-cover"
-                />
-              </div>
-              <ChevronDown className="w-3 h-3 text-zinc-400" />
-            </button>
+          {/* User Profile or Guest Login/Register Buttons */}
+          {currentUser ? (
+            <div className="relative">
+              <button
+                onClick={() => setShowUserDropdown(!showUserDropdown)}
+                className="flex items-center space-x-1.5 p-0.5 pl-1 pr-1.5 rounded-xl border border-zinc-200 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700 transition-colors"
+              >
+                <div className="relative w-7 h-7 rounded-full overflow-hidden ring-2 ring-indigo-500/40">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={currentUser.avatar}
+                    alt={currentUser.name}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                <ChevronDown className="w-3 h-3 text-zinc-400" />
+              </button>
 
-            {showUserDropdown && (
-              <>
-                <div className="fixed inset-0 z-20" onClick={() => setShowUserDropdown(false)} />
-                <div className="absolute right-0 mt-2 w-64 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-2xl p-3 z-30 animate-in fade-in zoom-in-95">
-                  <div
-                    onClick={() => {
-                      setShowUserDropdown(false);
-                      setViewingUser(currentUser);
-                    }}
-                    className="flex items-center space-x-3 p-2 rounded-xl hover:bg-zinc-50 dark:hover:bg-zinc-800/60 cursor-pointer border-b border-zinc-100 dark:border-zinc-800"
-                  >
-                    <div className="w-10 h-10 rounded-full overflow-hidden ring-2 ring-indigo-500/40 flex-shrink-0">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
-                        src={currentUser.avatar}
-                        alt={currentUser.name}
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-xs font-bold text-zinc-900 dark:text-white truncate">
-                        {currentUser.name}
-                      </p>
-                      <div className="flex items-center space-x-1 mt-0.5">
-                        <TrustIcon className="w-3 h-3 text-amber-500" />
-                        <span className="text-[11px] font-medium text-amber-600 dark:text-amber-400">
-                          {currentUser.trustTitle}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="space-y-1 mt-2">
-                    <button
+              {showUserDropdown && (
+                <>
+                  <div className="fixed inset-0 z-20" onClick={() => setShowUserDropdown(false)} />
+                  <div className="absolute right-0 mt-2 w-64 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-2xl p-3 z-30 animate-in fade-in zoom-in-95">
+                    <div
                       onClick={() => {
                         setShowUserDropdown(false);
                         setViewingUser(currentUser);
                       }}
-                      className="w-full flex items-center space-x-2 px-3 py-2 text-xs rounded-xl hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 transition-colors text-left"
+                      className="flex items-center space-x-3 p-2 rounded-xl hover:bg-zinc-50 dark:hover:bg-zinc-800/60 cursor-pointer border-b border-zinc-100 dark:border-zinc-800"
                     >
-                      <Compass className="w-3.5 h-3.5 text-sky-500" />
-                      <span>查看/编辑星际通行证</span>
-                    </button>
+                      <div className="w-10 h-10 rounded-full overflow-hidden ring-2 ring-indigo-500/40 flex-shrink-0">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={currentUser.avatar}
+                          alt={currentUser.name}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-xs font-bold text-zinc-900 dark:text-white truncate">
+                          {currentUser.name}
+                        </p>
+                        {TrustIcon && (
+                          <div className="flex items-center space-x-1 mt-0.5">
+                            <TrustIcon className="w-3 h-3 text-amber-500" />
+                            <span className="text-[11px] font-medium text-amber-600 dark:text-amber-400">
+                              {currentUser.trustTitle}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
 
-                    <button
-                      onClick={() => {
-                        setShowUserDropdown(false);
-                        setIsLevelMatrixOpen(true);
-                      }}
-                      className="w-full flex items-center space-x-2 px-3 py-2 text-xs rounded-xl hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 transition-colors text-left"
-                    >
-                      <Award className="w-3.5 h-3.5 text-amber-500" />
-                      <span>宇宙星阶白皮书 (等级体系)</span>
-                    </button>
+                    <div className="space-y-1 mt-2">
+                      <button
+                        onClick={() => {
+                          setShowUserDropdown(false);
+                          setViewingUser(currentUser);
+                        }}
+                        className="w-full flex items-center space-x-2 px-3 py-2 text-xs rounded-xl hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 transition-colors text-left"
+                      >
+                        <Compass className="w-3.5 h-3.5 text-sky-500" />
+                        <span>查看/编辑星际通行证</span>
+                      </button>
 
-                    <button
-                      onClick={() => {
-                        setShowUserDropdown(false);
-                        setIsUserSwitcherOpen(true);
-                      }}
-                      className="w-full flex items-center space-x-2 px-3 py-2 text-xs rounded-xl hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 transition-colors text-left"
-                    >
-                      <Users className="w-3.5 h-3.5 text-indigo-500" />
-                      <span>切换航行者身份 (测试各星阶)</span>
-                    </button>
+                      <button
+                        onClick={() => {
+                          setShowUserDropdown(false);
+                          setIsLevelMatrixOpen(true);
+                        }}
+                        className="w-full flex items-center space-x-2 px-3 py-2 text-xs rounded-xl hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 transition-colors text-left"
+                      >
+                        <Award className="w-3.5 h-3.5 text-amber-500" />
+                        <span>宇宙星阶白皮书 (等级体系)</span>
+                      </button>
+
+                      <button
+                        onClick={() => {
+                          setShowUserDropdown(false);
+                          setIsUserSwitcherOpen(true);
+                        }}
+                        className="w-full flex items-center space-x-2 px-3 py-2 text-xs rounded-xl hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 transition-colors text-left"
+                      >
+                        <Users className="w-3.5 h-3.5 text-indigo-500" />
+                        <span>切换航行者身份 (测试各星阶)</span>
+                      </button>
+
+                      <div className="pt-1 border-t border-zinc-100 dark:border-zinc-800">
+                        <button
+                          onClick={() => {
+                            setShowUserDropdown(false);
+                            logout();
+                          }}
+                          className="w-full flex items-center space-x-2 px-3 py-2 text-xs rounded-xl hover:bg-red-50 dark:hover:bg-red-950/30 text-red-600 dark:text-red-400 transition-colors text-left font-medium"
+                        >
+                          <LogOut className="w-3.5 h-3.5" />
+                          <span>退出登入 (断开星际连接)</span>
+                        </button>
+                      </div>
+                    </div>
                   </div>
-                </div>
-              </>
-            )}
-          </div>
+                </>
+              )}
+            </div>
+          ) : (
+            /* Guest Mode: Sign In & Sign Up Buttons */
+            <div className="flex items-center space-x-1.5 sm:space-x-2">
+              <button
+                onClick={() => setIsAuthModalOpen(true, 'login')}
+                className="flex items-center space-x-1 px-3 py-1.5 rounded-xl border border-zinc-200 dark:border-zinc-700 hover:border-zinc-300 dark:hover:border-zinc-600 text-xs font-bold text-zinc-700 dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+              >
+                <LogIn className="w-3.5 h-3.5 text-indigo-500" />
+                <span>登入</span>
+              </button>
+
+              <button
+                onClick={() => setIsAuthModalOpen(true, 'register')}
+                className="flex items-center space-x-1 px-3.5 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold shadow-sm shadow-indigo-600/30 hover:scale-[1.02] active:scale-[0.98] transition-all"
+              >
+                <UserPlus className="w-3.5 h-3.5" />
+                <span>跃迁注册</span>
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </header>

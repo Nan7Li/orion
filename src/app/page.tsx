@@ -13,6 +13,7 @@ import { NotificationDrawer } from '@/components/NotificationDrawer';
 import { UserProfileModal } from '@/components/UserProfileModal';
 import { LevelMatrixModal } from '@/components/LevelMatrixModal';
 import { CosmicChatDrawer } from '@/components/CosmicChatDrawer';
+import { AuthModal } from '@/components/AuthModal';
 import { ToastContainer } from '@/components/Toast';
 import { Radio, Sparkles, RefreshCw } from 'lucide-react';
 
@@ -78,6 +79,7 @@ const ForumMain: React.FC = () => {
       <UserProfileModal />
       <LevelMatrixModal />
       <CosmicChatDrawer />
+      <AuthModal />
       <ToastContainer />
     </div>
   );

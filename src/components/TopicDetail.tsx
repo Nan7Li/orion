@@ -39,6 +39,7 @@ export const TopicDetail: React.FC = () => {
     setSelectedCategory,
     currentUser,
     showToast,
+    setIsAuthModalOpen,
   } = useForum();
 
   const [replyContent, setReplyContent] = useState('');
@@ -232,7 +233,7 @@ export const TopicDetail: React.FC = () => {
           <div className="pt-2">
             <EmojiReactions
               reactions={activeTopic.reactions}
-              currentUserId={currentUser.id}
+              currentUserId={currentUser ? currentUser.id : 'guest'}
               onReact={(emoji) => toggleReactionTopic(activeTopic.id, emoji)}
             />
           </div>
@@ -347,7 +348,7 @@ export const TopicDetail: React.FC = () => {
               <div className="flex items-center justify-between pt-2 border-t border-zinc-100 dark:border-zinc-800/60 pl-0 sm:pl-9">
                 <EmojiReactions
                   reactions={reply.reactions}
-                  currentUserId={currentUser.id}
+                  currentUserId={currentUser ? currentUser.id : 'guest'}
                   onReact={(emoji) => toggleReactionReply(activeTopic.id, reply.id, emoji)}
                 />
 
@@ -366,6 +367,10 @@ export const TopicDetail: React.FC = () => {
 
                   <button
                     onClick={() => {
+                      if (!currentUser) {
+                        setIsAuthModalOpen(true, 'login');
+                        return;
+                      }
                       setReplyToUser(reply.author.name);
                       setReplyToContent(reply.content);
                       const composer = document.getElementById('reply-textarea');
@@ -386,62 +391,86 @@ export const TopicDetail: React.FC = () => {
             id="reply-composer"
             className="bg-white dark:bg-[#121721] rounded-3xl border border-zinc-200/80 dark:border-zinc-800 p-5 sm:p-6 shadow-xs space-y-4"
           >
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-2">
-                <div className="w-7 h-7 rounded-full overflow-hidden border border-zinc-200 dark:border-zinc-700">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={currentUser.avatar}
-                    alt={currentUser.name}
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-                <span className="text-xs font-semibold text-zinc-700 dark:text-zinc-300">
-                  以 <span className="text-indigo-600 dark:text-indigo-400 font-bold">{currentUser.name}</span> 的身份回复
-                </span>
-              </div>
+            {currentUser ? (
+              <>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <div className="w-7 h-7 rounded-full overflow-hidden border border-zinc-200 dark:border-zinc-700">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={currentUser.avatar}
+                        alt={currentUser.name}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                    <span className="text-xs font-semibold text-zinc-700 dark:text-zinc-300">
+                      以 <span className="text-indigo-600 dark:text-indigo-400 font-bold">{currentUser.name}</span> 的身份回复
+                    </span>
+                  </div>
 
-              {replyToUser && (
-                <div className="flex items-center space-x-1.5 text-xs bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 px-2.5 py-1 rounded-lg">
-                  <span>正在回复 @{replyToUser}</span>
+                  {replyToUser && (
+                    <div className="flex items-center space-x-1.5 text-xs bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 px-2.5 py-1 rounded-lg">
+                      <span>正在回复 @{replyToUser}</span>
+                      <button
+                        onClick={() => {
+                          setReplyToUser(null);
+                          setReplyToContent(null);
+                        }}
+                        className="hover:opacity-75 font-bold"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                <form onSubmit={handleSubmitReply} className="space-y-3">
+                  <textarea
+                    id="reply-textarea"
+                    rows={4}
+                    value={replyContent}
+                    onChange={(e) => setReplyContent(e.target.value)}
+                    placeholder="撰写你的回复（支持 Markdown 与代码块高亮，请遵守 Orion 社区公约）..."
+                    className="w-full px-4 py-3 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50/70 dark:bg-zinc-950/60 text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all resize-y font-mono"
+                  />
+
+                  <div className="flex items-center justify-between">
+                    <span className="text-[11px] text-zinc-400 font-mono">
+                      快捷键 Ctrl + Enter 发送
+                    </span>
+
+                    <button
+                      type="submit"
+                      disabled={!replyContent.trim()}
+                      className="inline-flex items-center space-x-2 px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40 text-white text-xs font-bold shadow-md shadow-indigo-600/30 transition-all"
+                    >
+                      <Send className="w-3.5 h-3.5" />
+                      <span>提交回复</span>
+                    </button>
+                  </div>
+                </form>
+              </>
+            ) : (
+              <div className="py-6 px-4 text-center space-y-3">
+                <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                  登入星际通行证后即可参与本话题的深入讨论，发表技术见解。
+                </p>
+                <div className="flex items-center justify-center space-x-2">
                   <button
-                    onClick={() => {
-                      setReplyToUser(null);
-                      setReplyToContent(null);
-                    }}
-                    className="hover:opacity-75 font-bold"
+                    onClick={() => setIsAuthModalOpen(true, 'login')}
+                    className="px-4 py-2 rounded-xl border border-zinc-200 dark:border-zinc-700 text-xs font-bold text-zinc-700 dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
                   >
-                    ×
+                    航行登入
+                  </button>
+                  <button
+                    onClick={() => setIsAuthModalOpen(true, 'register')}
+                    className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold shadow-sm shadow-indigo-600/30 transition-all"
+                  >
+                    跃迁注册新账号
                   </button>
                 </div>
-              )}
-            </div>
-
-            <form onSubmit={handleSubmitReply} className="space-y-3">
-              <textarea
-                id="reply-textarea"
-                rows={4}
-                value={replyContent}
-                onChange={(e) => setReplyContent(e.target.value)}
-                placeholder="撰写你的回复（支持 Markdown 与代码块高亮，请遵守 Orion 社区公约）..."
-                className="w-full px-4 py-3 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50/70 dark:bg-zinc-950/60 text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all resize-y font-mono"
-              />
-
-              <div className="flex items-center justify-between">
-                <span className="text-[11px] text-zinc-400 font-mono">
-                  快捷键 Ctrl + Enter 发送
-                </span>
-
-                <button
-                  type="submit"
-                  disabled={!replyContent.trim()}
-                  className="inline-flex items-center space-x-2 px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40 text-white text-xs font-bold shadow-md shadow-indigo-600/30 transition-all"
-                >
-                  <Send className="w-3.5 h-3.5" />
-                  <span>提交回复</span>
-                </button>
               </div>
-            </form>
+            )}
           </div>
         </div>
       </div>

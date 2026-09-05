@@ -58,7 +58,7 @@ const INITIAL_MESSAGES: ChatMessage[] = [
 ];
 
 export const CosmicChatDrawer: React.FC = () => {
-  const { isChatDrawerOpen, setIsChatDrawerOpen, currentUser } = useForum();
+  const { isChatDrawerOpen, setIsChatDrawerOpen, currentUser, setIsAuthModalOpen } = useForum();
   const [messages, setMessages] = useState<ChatMessage[]>(INITIAL_MESSAGES);
   const [input, setInput] = useState('');
   const endRef = useRef<HTMLDivElement>(null);
@@ -73,6 +73,10 @@ export const CosmicChatDrawer: React.FC = () => {
 
   const handleSend = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!currentUser) {
+      setIsAuthModalOpen(true, 'login');
+      return;
+    }
     if (!input.trim()) return;
 
     const now = new Date();
@@ -137,7 +141,7 @@ export const CosmicChatDrawer: React.FC = () => {
         {/* Messages List */}
         <div className="flex-1 overflow-y-auto p-4 space-y-3.5 text-xs">
           {messages.map((m) => {
-            const isMe = m.sender.id === currentUser.id;
+            const isMe = currentUser ? m.sender.id === currentUser.id : false;
             const trust = getTrustLevelBadge(m.sender.trustLevel);
 
             return (
@@ -179,25 +183,37 @@ export const CosmicChatDrawer: React.FC = () => {
         </div>
 
         {/* Chat Input Bar */}
-        <form
-          onSubmit={handleSend}
-          className="p-3 border-t border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900/60 flex items-center space-x-2"
-        >
-          <input
-            type="text"
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            placeholder="发送星际广播，全频道实时接收..."
-            className="flex-1 px-3.5 py-2 text-xs rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/50"
-          />
-          <button
-            type="submit"
-            disabled={!input.trim()}
-            className="p-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white transition-all disabled:opacity-40"
+        {currentUser ? (
+          <form
+            onSubmit={handleSend}
+            className="p-3 border-t border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900/60 flex items-center space-x-2"
           >
-            <Send className="w-4 h-4" />
-          </button>
-        </form>
+            <input
+              type="text"
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              placeholder="发送星际广播，全频道实时接收..."
+              className="flex-1 px-3.5 py-2 text-xs rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/50"
+            />
+            <button
+              type="submit"
+              disabled={!input.trim()}
+              className="p-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white transition-all disabled:opacity-40"
+            >
+              <Send className="w-4 h-4" />
+            </button>
+          </form>
+        ) : (
+          <div className="p-3 border-t border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900/60 flex items-center justify-between">
+            <span className="text-xs text-zinc-400">登入后即可参与公频实时交流</span>
+            <button
+              onClick={() => setIsAuthModalOpen(true, 'login')}
+              className="px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold"
+            >
+              登入参与
+            </button>
+          </div>
+        )}
       </div>
     </>
   );
