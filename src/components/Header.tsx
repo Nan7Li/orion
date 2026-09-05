@@ -18,6 +18,8 @@ import {
   LayoutGrid,
   Compass,
   MessageSquare,
+  RotateCw,
+  Award,
 } from 'lucide-react';
 
 export const Header: React.FC = () => {
@@ -32,10 +34,17 @@ export const Header: React.FC = () => {
     setIsComposerOpen,
     setIsSearchModalOpen,
     setIsUserSwitcherOpen,
+    setIsNotificationsOpen,
+    setIsChatDrawerOpen,
+    setIsLevelMatrixOpen,
+    setViewingUser,
     setActiveTopicId,
     setSelectedCategory,
     categories,
     selectedCategory,
+    notifications,
+    refreshTopics,
+    isLoading,
   } = useForum();
 
   const [showCategoryMenu, setShowCategoryMenu] = useState(false);
@@ -43,6 +52,7 @@ export const Header: React.FC = () => {
 
   const trust = getTrustLevelBadge(currentUser.trustLevel);
   const TrustIcon = trust.icon;
+  const unreadCount = notifications.filter((n) => !n.isRead).length;
 
   const handleLogoClick = () => {
     setActiveTopicId(null);
@@ -147,8 +157,8 @@ export const Header: React.FC = () => {
           >
             <div className="flex items-center space-x-2">
               <Search className="w-3.5 h-3.5 text-zinc-400 group-hover:text-indigo-500 transition-colors" />
-              <span className="text-zinc-500 dark:text-zinc-400 group-hover:text-zinc-700 dark:group-hover:text-zinc-200">
-                搜索话题、星友、技术标签...
+              <span className="text-zinc-500 dark:text-zinc-400 group-hover:text-zinc-700 dark:group-hover:text-zinc-200 truncate">
+                搜索星际议题、星友、技术标签...
               </span>
             </div>
             <kbd className="hidden sm:inline-flex items-center px-1.5 py-0.5 text-[10px] font-mono rounded border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400 shadow-xs">
@@ -185,22 +195,33 @@ export const Header: React.FC = () => {
             </button>
           </div>
 
+          {/* Refresh button */}
+          <button
+            onClick={refreshTopics}
+            disabled={isLoading}
+            className="p-1.5 sm:p-2 rounded-xl text-zinc-500 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+            title="刷新星河动态 (Cloudflare D1 同步)"
+          >
+            <RotateCw className={`w-4 h-4 ${isLoading ? 'animate-spin text-indigo-500' : ''}`} />
+          </button>
+
           {/* New Topic Button */}
           <button
             onClick={() => setIsComposerOpen(true)}
             className="flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold shadow-sm shadow-indigo-600/30 hover:scale-[1.02] active:scale-[0.98] transition-all"
           >
             <Plus className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">发帖</span>
+            <span className="hidden sm:inline">发布星轨</span>
           </button>
 
-          {/* Chat Mock */}
+          {/* Cosmic Live Chat */}
           <button
-            onClick={() => alert('💬 Orion 社区实时群聊频道（Discourse Chat 模式）开发中，即将上线！')}
-            className="p-1.5 sm:p-2 rounded-xl text-zinc-500 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
-            title="实时群聊 (Chat)"
+            onClick={() => setIsChatDrawerOpen(true)}
+            className="p-1.5 sm:p-2 rounded-xl text-zinc-500 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors relative"
+            title="星际公频通讯 (Live Chat)"
           >
             <MessageSquare className="w-4 h-4" />
+            <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 bg-emerald-500 rounded-full" />
           </button>
 
           {/* Theme Toggle */}
@@ -216,15 +237,19 @@ export const Header: React.FC = () => {
             )}
           </button>
 
-          {/* Bell */}
+          {/* Notifications Bell */}
           <button
-            onClick={() => alert('🔔 暂无未读系统提醒')}
+            onClick={() => setIsNotificationsOpen(true)}
             className="p-1.5 sm:p-2 rounded-xl text-zinc-500 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors relative"
-            title="通知"
+            title="引力广播通知"
           >
             <Bell className="w-4 h-4" />
-            <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-indigo-500 rounded-full animate-ping" />
-            <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-indigo-500 rounded-full" />
+            {unreadCount > 0 && (
+              <>
+                <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-indigo-500 rounded-full animate-ping" />
+                <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-indigo-500 rounded-full" />
+              </>
+            )}
           </button>
 
           {/* User Profile */}
@@ -248,7 +273,13 @@ export const Header: React.FC = () => {
               <>
                 <div className="fixed inset-0 z-20" onClick={() => setShowUserDropdown(false)} />
                 <div className="absolute right-0 mt-2 w-64 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-2xl p-3 z-30 animate-in fade-in zoom-in-95">
-                  <div className="flex items-center space-x-3 p-2 border-b border-zinc-100 dark:border-zinc-800">
+                  <div
+                    onClick={() => {
+                      setShowUserDropdown(false);
+                      setViewingUser(currentUser);
+                    }}
+                    className="flex items-center space-x-3 p-2 rounded-xl hover:bg-zinc-50 dark:hover:bg-zinc-800/60 cursor-pointer border-b border-zinc-100 dark:border-zinc-800"
+                  >
                     <div className="w-10 h-10 rounded-full overflow-hidden ring-2 ring-indigo-500/40 flex-shrink-0">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
@@ -274,22 +305,34 @@ export const Header: React.FC = () => {
                     <button
                       onClick={() => {
                         setShowUserDropdown(false);
-                        setIsUserSwitcherOpen(true);
+                        setViewingUser(currentUser);
                       }}
-                      className="w-full flex items-center space-x-2 px-3 py-2 text-xs rounded-xl hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 transition-colors"
+                      className="w-full flex items-center space-x-2 px-3 py-2 text-xs rounded-xl hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 transition-colors text-left"
                     >
-                      <Users className="w-3.5 h-3.5 text-indigo-500" />
-                      <span>星阶身份切换 (主权官 / 恒星守望者)</span>
+                      <Compass className="w-3.5 h-3.5 text-sky-500" />
+                      <span>查看/编辑星际通行证</span>
                     </button>
+
                     <button
                       onClick={() => {
                         setShowUserDropdown(false);
-                        alert(`个人档案：${currentUser.name}\n等级：Lv.${currentUser.trustLevel} (${currentUser.trustTitle})`);
+                        setIsLevelMatrixOpen(true);
                       }}
-                      className="w-full flex items-center space-x-2 px-3 py-2 text-xs rounded-xl hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 transition-colors"
+                      className="w-full flex items-center space-x-2 px-3 py-2 text-xs rounded-xl hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 transition-colors text-left"
                     >
-                      <Compass className="w-3.5 h-3.5 text-sky-500" />
-                      <span>查看个人主页</span>
+                      <Award className="w-3.5 h-3.5 text-amber-500" />
+                      <span>宇宙星阶白皮书 (等级体系)</span>
+                    </button>
+
+                    <button
+                      onClick={() => {
+                        setShowUserDropdown(false);
+                        setIsUserSwitcherOpen(true);
+                      }}
+                      className="w-full flex items-center space-x-2 px-3 py-2 text-xs rounded-xl hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 transition-colors text-left"
+                    >
+                      <Users className="w-3.5 h-3.5 text-indigo-500" />
+                      <span>切换航行者身份 (测试各星阶)</span>
                     </button>
                   </div>
                 </div>

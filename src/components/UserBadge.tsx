@@ -18,6 +18,7 @@ export const getTrustLevelBadge = (level: TrustLevel) => {
         label: '猎户座主权官',
         subLabel: 'Orion Sovereign',
         icon: Orbit,
+        color: '#f59e0b',
         bg: 'bg-amber-500/10 text-amber-500 border-amber-500/30 dark:bg-amber-400/15 dark:text-amber-300 dark:border-amber-400/30',
         glow: 'shadow-[0_0_12px_rgba(245,158,11,0.25)]',
       };
@@ -26,6 +27,7 @@ export const getTrustLevelBadge = (level: TrustLevel) => {
         label: '恒星守望者',
         subLabel: 'Stellar Warden',
         icon: Sparkles,
+        color: '#a855f7',
         bg: 'bg-purple-500/10 text-purple-500 border-purple-500/30 dark:bg-purple-400/15 dark:text-purple-300 dark:border-purple-400/30',
         glow: 'shadow-[0_0_8px_rgba(168,85,247,0.2)]',
       };
@@ -34,6 +36,7 @@ export const getTrustLevelBadge = (level: TrustLevel) => {
         label: '行星领航员',
         subLabel: 'Planetary Navigator',
         icon: Compass,
+        color: '#10b981',
         bg: 'bg-emerald-500/10 text-emerald-600 border-emerald-500/30 dark:bg-emerald-400/15 dark:text-emerald-400 dark:border-emerald-400/30',
         glow: '',
       };
@@ -42,6 +45,7 @@ export const getTrustLevelBadge = (level: TrustLevel) => {
         label: '星际漫游者',
         subLabel: 'Cosmos Voyager',
         icon: Rocket,
+        color: '#0284c7',
         bg: 'bg-sky-500/10 text-sky-600 border-sky-500/30 dark:bg-sky-400/15 dark:text-sky-400 dark:border-sky-400/30',
         glow: '',
       };
@@ -50,6 +54,7 @@ export const getTrustLevelBadge = (level: TrustLevel) => {
         label: '星尘观测者',
         subLabel: 'Stardust Observer',
         icon: Telescope,
+        color: '#71717a',
         bg: 'bg-zinc-500/10 text-zinc-500 border-zinc-500/30 dark:bg-zinc-700/20 dark:text-zinc-400 dark:border-zinc-600/30',
         glow: '',
       };

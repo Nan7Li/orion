@@ -9,10 +9,15 @@ import { TopicDetail } from '@/components/TopicDetail';
 import { ComposerDrawer } from '@/components/ComposerDrawer';
 import { SearchModal } from '@/components/SearchModal';
 import { UserSwitcherModal } from '@/components/UserSwitcherModal';
-import { Radio, Sparkles } from 'lucide-react';
+import { NotificationDrawer } from '@/components/NotificationDrawer';
+import { UserProfileModal } from '@/components/UserProfileModal';
+import { LevelMatrixModal } from '@/components/LevelMatrixModal';
+import { CosmicChatDrawer } from '@/components/CosmicChatDrawer';
+import { ToastContainer } from '@/components/Toast';
+import { Radio, Sparkles, RefreshCw } from 'lucide-react';
 
 const ForumMain: React.FC = () => {
-  const { activeTopicId, setIsComposerOpen } = useForum();
+  const { activeTopicId, setIsComposerOpen, refreshTopics, isLoading } = useForum();
 
   return (
     <div className="min-h-screen flex flex-col bg-[#f6f8fa] dark:bg-[#0a0d14] transition-colors duration-200">
@@ -24,20 +29,31 @@ const ForumMain: React.FC = () => {
           <div className="flex items-center space-x-2 text-zinc-700 dark:text-zinc-300 truncate">
             <Radio className="w-3.5 h-3.5 text-indigo-500 animate-pulse flex-shrink-0" />
             <span className="font-semibold text-indigo-600 dark:text-indigo-400">
-              [社区播报]
+              [星舰通标]
             </span>
             <span className="truncate">
-              Orion 论坛 2.0 升级上线：支持 Discourse 经典表格流、时间轴、表情互动与 AI 速读！
+              Orion 猎户座社区全线接入 Cloudflare D1 边缘多节点数据库，全端数据实时双向同步！
             </span>
           </div>
 
-          <button
-            onClick={() => setIsComposerOpen(true)}
-            className="hidden md:flex items-center space-x-1 text-indigo-600 dark:text-indigo-400 font-semibold hover:underline flex-shrink-0 ml-4"
-          >
-            <Sparkles className="w-3 h-3" />
-            <span>发布第一篇话题</span>
-          </button>
+          <div className="hidden sm:flex items-center space-x-3 flex-shrink-0 ml-4">
+            <button
+              onClick={refreshTopics}
+              disabled={isLoading}
+              className="flex items-center space-x-1 text-zinc-500 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
+              title="刷新全星域动态"
+            >
+              <RefreshCw className={`w-3 h-3 ${isLoading ? 'animate-spin text-indigo-500' : ''}`} />
+              <span>同步引力流</span>
+            </button>
+            <button
+              onClick={() => setIsComposerOpen(true)}
+              className="flex items-center space-x-1 text-indigo-600 dark:text-indigo-400 font-semibold hover:underline"
+            >
+              <Sparkles className="w-3 h-3" />
+              <span>发布星轨议题</span>
+            </button>
+          </div>
         </div>
       </div>
 
@@ -58,6 +74,11 @@ const ForumMain: React.FC = () => {
       <ComposerDrawer />
       <SearchModal />
       <UserSwitcherModal />
+      <NotificationDrawer />
+      <UserProfileModal />
+      <LevelMatrixModal />
+      <CosmicChatDrawer />
+      <ToastContainer />
     </div>
   );
 };

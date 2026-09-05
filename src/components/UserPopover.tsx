@@ -2,8 +2,9 @@
 
 import React, { useState } from 'react';
 import { User } from '@/types';
+import { useForum } from '@/context/ForumContext';
 import { getTrustLevelBadge } from './UserBadge';
-import { Calendar, Send } from 'lucide-react';
+import { Calendar, Compass, Send } from 'lucide-react';
 
 interface UserPopoverProps {
   user: User;
@@ -12,8 +13,20 @@ interface UserPopoverProps {
 
 export const UserPopover: React.FC<UserPopoverProps> = ({ user, children }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const { setViewingUser, showToast } = useForum();
   const trust = getTrustLevelBadge(user.trustLevel);
   const TrustIcon = trust.icon;
+
+  const handleOpenProfile = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsOpen(false);
+    setViewingUser(user);
+  };
+
+  const handleSendDM = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    showToast(`🛰️ 已与 @${user.username} 建立端到端星际通讯信道`, 'info');
+  };
 
   return (
     <div
@@ -21,14 +34,19 @@ export const UserPopover: React.FC<UserPopoverProps> = ({ user, children }) => {
       onMouseEnter={() => setIsOpen(true)}
       onMouseLeave={() => setIsOpen(false)}
     >
-      <div className="cursor-pointer">{children}</div>
+      <div className="cursor-pointer" onClick={handleOpenProfile}>
+        {children}
+      </div>
 
       {isOpen && (
         <div className="absolute left-0 bottom-full mb-2 w-72 bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-2xl p-4 z-50 animate-in fade-in zoom-in-95 pointer-events-auto">
           {/* Header */}
-          <div className="flex items-start justify-between">
+          <div
+            className="flex items-start justify-between cursor-pointer group"
+            onClick={handleOpenProfile}
+          >
             <div className="flex items-center space-x-3">
-              <div className="relative w-12 h-12 rounded-full overflow-hidden ring-2 ring-indigo-500/30">
+              <div className="relative w-12 h-12 rounded-full overflow-hidden ring-2 ring-indigo-500/30 group-hover:ring-indigo-500 transition-all">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={user.avatar}
@@ -37,7 +55,7 @@ export const UserPopover: React.FC<UserPopoverProps> = ({ user, children }) => {
                 />
               </div>
               <div>
-                <h4 className="text-sm font-bold text-zinc-900 dark:text-white leading-tight">
+                <h4 className="text-sm font-bold text-zinc-900 dark:text-white leading-tight group-hover:text-indigo-500 transition-colors">
                   {user.name}
                 </h4>
                 <p className="text-xs text-zinc-400 font-mono">@{user.username}</p>
@@ -96,15 +114,24 @@ export const UserPopover: React.FC<UserPopoverProps> = ({ user, children }) => {
           <div className="flex items-center justify-between mt-3 pt-2 border-t border-zinc-100 dark:border-zinc-800 text-[11px] text-zinc-400">
             <div className="flex items-center space-x-1">
               <Calendar className="w-3 h-3" />
-              <span>注册于 {user.joinedAt}</span>
+              <span>入轨 {user.joinedAt}</span>
             </div>
-            <button
-              onClick={() => alert(`已向 @${user.username} 发起私信通道`)}
-              className="inline-flex items-center space-x-1 text-indigo-600 dark:text-indigo-400 hover:underline font-semibold"
-            >
-              <Send className="w-3 h-3" />
-              <span>私信</span>
-            </button>
+            <div className="flex items-center space-x-2">
+              <button
+                onClick={handleOpenProfile}
+                className="inline-flex items-center space-x-1 text-indigo-600 dark:text-indigo-400 hover:underline font-semibold"
+              >
+                <Compass className="w-3 h-3" />
+                <span>通行证</span>
+              </button>
+              <button
+                onClick={handleSendDM}
+                className="inline-flex items-center space-x-1 text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200 font-semibold"
+              >
+                <Send className="w-3 h-3" />
+                <span>私信</span>
+              </button>
+            </div>
           </div>
         </div>
       )}

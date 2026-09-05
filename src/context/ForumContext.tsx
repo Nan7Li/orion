@@ -1,8 +1,24 @@
 'use client';
 
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { Category, DisplayMode, Reply, Topic, User, ViewTab } from '@/types';
 import { CATEGORIES, INITIAL_TOPICS, INITIAL_USERS } from '@/data/initialData';
+
+export interface ToastItem {
+  id: string;
+  message: string;
+  type: 'info' | 'success' | 'warning' | 'error';
+}
+
+export interface ForumNotification {
+  id: string;
+  type: 'reply' | 'like' | 'level_up' | 'badge' | 'mention';
+  title: string;
+  content: string;
+  topicId?: string;
+  createdAt: string;
+  isRead: boolean;
+}
 
 interface ForumContextType {
   currentUser: User;
@@ -32,32 +48,86 @@ interface ForumContextType {
   setIsSearchModalOpen: (open: boolean) => void;
   isUserSwitcherOpen: boolean;
   setIsUserSwitcherOpen: (open: boolean) => void;
+  isNotificationsOpen: boolean;
+  setIsNotificationsOpen: (open: boolean) => void;
+  isChatDrawerOpen: boolean;
+  setIsChatDrawerOpen: (open: boolean) => void;
+  isLevelMatrixOpen: boolean;
+  setIsLevelMatrixOpen: (open: boolean) => void;
+  viewingUser: User | null;
+  setViewingUser: (user: User | null) => void;
+  notifications: ForumNotification[];
+  markAllNotificationsRead: () => void;
+  toasts: ToastItem[];
+  showToast: (message: string, type?: 'info' | 'success' | 'warning' | 'error') => void;
+  removeToast: (id: string) => void;
   addTopic: (title: string, categorySlug: string, tags: string[], content: string) => Topic;
-  addReply: (topicId: string, content: string, replyToUser?: string, replyToContent?: string) => void;
-  toggleLikeTopic: (topicId: string) => void;
-  toggleBookmarkTopic: (topicId: string) => void;
-  toggleLikeReply: (topicId: string, replyId: string) => void;
-  toggleReactionTopic: (topicId: string, emoji: string) => void;
-  toggleReactionReply: (topicId: string, replyId: string, emoji: string) => void;
+  addReply: (topicId: string, content: string, replyToUser?: string, replyToContent?: string) => Promise<void>;
+  toggleLikeTopic: (topicId: string) => Promise<void>;
+  toggleBookmarkTopic: (topicId: string) => Promise<void>;
+  toggleLikeReply: (topicId: string, replyId: string) => Promise<void>;
+  toggleReactionTopic: (topicId: string, emoji: string) => Promise<void>;
+  toggleReactionReply: (topicId: string, replyId: string, emoji: string) => Promise<void>;
+  updateUserProfile: (updates: Partial<User>) => Promise<void>;
+  refreshTopics: () => Promise<void>;
   generateAiSummary: (topicId: string) => Promise<string>;
   filteredTopics: Topic[];
   activeTopic: Topic | null;
+  isLoading: boolean;
 }
 
 const ForumContext = createContext<ForumContextType | undefined>(undefined);
 
 const STORAGE_KEYS = {
-  TOPICS: 'orion_forum_topics_v3',
-  CURRENT_USER: 'orion_forum_current_user_v3',
-  THEME: 'orion_forum_theme_v3',
-  DISPLAY_MODE: 'orion_forum_display_mode_v3',
-  SIDEBAR_COLLAPSED: 'orion_forum_sidebar_v3',
+  TOPICS: 'orion_forum_topics_v4',
+  CURRENT_USER: 'orion_forum_current_user_v4',
+  THEME: 'orion_forum_theme_v4',
+  DISPLAY_MODE: 'orion_forum_display_mode_v4',
+  SIDEBAR_COLLAPSED: 'orion_forum_sidebar_v4',
+  NOTIFICATIONS: 'orion_forum_notifications_v4',
 };
 
+const INITIAL_NOTIFICATIONS: ForumNotification[] = [
+  {
+    id: 'notif-1',
+    type: 'level_up',
+    title: '宇宙星阶晋升提醒',
+    content: '祝贺跃迁！你的星际引力值已达到 Lv.3【恒星守望者】，已解锁标签共治与精选推荐权。',
+    createdAt: '2024-09-05T18:00:00Z',
+    isRead: false,
+  },
+  {
+    id: 'notif-2',
+    type: 'reply',
+    title: 'Neo 回复了你的评论',
+    content: '“已为前排回帖的两位星友下发 Token，请进入个人控制台查收！”',
+    topicId: 'topic-4',
+    createdAt: '2024-09-04T14:00:00Z',
+    isRead: false,
+  },
+  {
+    id: 'notif-3',
+    type: 'like',
+    title: 'Cygnus_极客 点赞了你的发言',
+    content: '在话题《各大云厂商海外 VPS 线路全面实测》中获得了 1 次星际赞赏。',
+    topicId: 'topic-3',
+    createdAt: '2024-09-03T16:45:00Z',
+    isRead: true,
+  },
+  {
+    id: 'notif-4',
+    type: 'badge',
+    title: '获得星舰通标勋章',
+    content: '你已荣获【🌟 恒星守望者】与【🚀 探索先锋】勋章，已点亮星际通行证。',
+    createdAt: '2024-09-01T10:00:00Z',
+    isRead: true,
+  },
+];
+
 export const ForumProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [users] = useState<User[]>(INITIAL_USERS);
-  const [categories] = useState<Category[]>(CATEGORIES);
-  const [currentUser, setCurrentUser] = useState<User>(INITIAL_USERS[5]); // Default: nan7li
+  const [users, setUsers] = useState<User[]>(INITIAL_USERS);
+  const [categories, setCategories] = useState<Category[]>(CATEGORIES);
+  const [currentUser, setCurrentUser] = useState<User>(INITIAL_USERS[5]); // Nan7Li
   const [topics, setTopics] = useState<Topic[]>(INITIAL_TOPICS);
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
@@ -70,44 +140,132 @@ export const ForumProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [isComposerOpen, setIsComposerOpen] = useState<boolean>(false);
   const [isSearchModalOpen, setIsSearchModalOpen] = useState<boolean>(false);
   const [isUserSwitcherOpen, setIsUserSwitcherOpen] = useState<boolean>(false);
+  const [isNotificationsOpen, setIsNotificationsOpen] = useState<boolean>(false);
+  const [isChatDrawerOpen, setIsChatDrawerOpen] = useState<boolean>(false);
+  const [isLevelMatrixOpen, setIsLevelMatrixOpen] = useState<boolean>(false);
+  const [viewingUser, setViewingUser] = useState<User | null>(null);
+  const [notifications, setNotifications] = useState<ForumNotification[]>(INITIAL_NOTIFICATIONS);
+  const [toasts, setToasts] = useState<ToastItem[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
 
-  // Load state from localStorage
-  useEffect(() => {
+  const showToast = useCallback((message: string, type: 'info' | 'success' | 'warning' | 'error' = 'info') => {
+    const id = `toast-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
+    setToasts((prev) => [...prev, { id, message, type }]);
+    setTimeout(() => {
+      setToasts((prev) => prev.filter((t) => t.id !== id));
+    }, 4000);
+  }, []);
+
+  const removeToast = useCallback((id: string) => {
+    setToasts((prev) => prev.filter((t) => t.id !== id));
+  }, []);
+
+  // Fetch topics from Cloudflare D1
+  const fetchD1Topics = useCallback(async (userId?: string) => {
     try {
-      const savedTopics = localStorage.getItem(STORAGE_KEYS.TOPICS);
-      if (savedTopics) {
-        const parsed = JSON.parse(savedTopics);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          setTopics(parsed);
+      setIsLoading(true);
+      const uid = userId || currentUser.id;
+      const res = await fetch(`/api/topics?userId=${encodeURIComponent(uid)}`);
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success && Array.isArray(data.topics) && data.topics.length > 0) {
+          setTopics(data.topics);
+          try {
+            localStorage.setItem(STORAGE_KEYS.TOPICS, JSON.stringify(data.topics));
+          } catch {}
         }
       }
+    } catch (e) {
+      console.warn('Live D1 topics fetch error, keeping cached state:', e);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [currentUser.id]);
 
+  // Fetch users from Cloudflare D1
+  const fetchD1Users = useCallback(async () => {
+    try {
+      const res = await fetch('/api/users');
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success && Array.isArray(data.users) && data.users.length > 0) {
+          setUsers(data.users);
+          // Sync current user if present
+          const found = data.users.find((u: User) => u.id === currentUser.id);
+          if (found) {
+            setCurrentUser(found);
+          }
+        }
+      }
+    } catch (e) {
+      console.warn('Live D1 users fetch error:', e);
+    }
+  }, [currentUser.id]);
+
+  // Fetch categories from Cloudflare D1
+  const fetchD1Categories = useCallback(async () => {
+    try {
+      const res = await fetch('/api/categories');
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success && Array.isArray(data.categories) && data.categories.length > 0) {
+          setCategories(data.categories);
+        }
+      }
+    } catch {}
+  }, []);
+
+  // Initial load
+  useEffect(() => {
+    try {
       const savedUser = localStorage.getItem(STORAGE_KEYS.CURRENT_USER);
       if (savedUser) {
-        const parsedUser = JSON.parse(savedUser);
-        if (parsedUser && parsedUser.id) {
-          setCurrentUser(parsedUser);
-        }
+        const parsed = JSON.parse(savedUser);
+        if (parsed && parsed.id) setCurrentUser(parsed);
       }
 
       const savedTheme = localStorage.getItem(STORAGE_KEYS.THEME) as 'dark' | 'light' | null;
-      if (savedTheme) {
-        setTheme(savedTheme);
-      }
+      if (savedTheme) setTheme(savedTheme);
 
       const savedDisplayMode = localStorage.getItem(STORAGE_KEYS.DISPLAY_MODE) as DisplayMode | null;
-      if (savedDisplayMode) {
-        setDisplayMode(savedDisplayMode);
-      }
+      if (savedDisplayMode) setDisplayMode(savedDisplayMode);
 
       const savedSidebar = localStorage.getItem(STORAGE_KEYS.SIDEBAR_COLLAPSED);
-      if (savedSidebar !== null) {
-        setIsSidebarCollapsed(savedSidebar === 'true');
+      if (savedSidebar !== null) setIsSidebarCollapsed(savedSidebar === 'true');
+
+      const savedNotifs = localStorage.getItem(STORAGE_KEYS.NOTIFICATIONS);
+      if (savedNotifs) {
+        const parsed = JSON.parse(savedNotifs);
+        if (Array.isArray(parsed) && parsed.length > 0) setNotifications(parsed);
+      }
+
+      // Check URL query for direct topic link e.g. ?t=topic-1
+      const params = new URLSearchParams(window.location.search);
+      const urlTopicId = params.get('t');
+      if (urlTopicId) {
+        setActiveTopicId(urlTopicId);
       }
     } catch (e) {
-      console.warn('Failed to load forum state', e);
+      console.warn('Failed to load local state', e);
     }
-  }, []);
+
+    fetchD1Topics();
+    fetchD1Users();
+    fetchD1Categories();
+  }, [fetchD1Topics, fetchD1Users, fetchD1Categories]);
+
+  // Sync URL with active topic
+  useEffect(() => {
+    try {
+      const url = new URL(window.location.href);
+      if (activeTopicId) {
+        url.searchParams.set('t', activeTopicId);
+      } else {
+        url.searchParams.delete('t');
+      }
+      window.history.replaceState({}, '', url.toString());
+    } catch {}
+  }, [activeTopicId]);
 
   // Update theme class
   useEffect(() => {
@@ -120,22 +278,14 @@ export const ForumProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     localStorage.setItem(STORAGE_KEYS.THEME, theme);
   }, [theme]);
 
-  // Persist topics
-  useEffect(() => {
-    try {
-      localStorage.setItem(STORAGE_KEYS.TOPICS, JSON.stringify(topics));
-    } catch (e) {
-      console.warn('Failed to persist topics', e);
-    }
-  }, [topics]);
-
+  // User switcher
   const handleSetCurrentUser = (user: User) => {
     setCurrentUser(user);
     try {
       localStorage.setItem(STORAGE_KEYS.CURRENT_USER, JSON.stringify(user));
-    } catch (e) {
-      console.warn('Failed to persist user', e);
-    }
+    } catch {}
+    fetchD1Topics(user.id);
+    showToast(`🌌 已跃迁为星舰身份：${user.name} (${user.trustTitle})`, 'info');
   };
 
   const handleSetDisplayMode = (mode: DisplayMode) => {
@@ -155,6 +305,17 @@ export const ForumProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'));
   };
 
+  const markAllNotificationsRead = () => {
+    setNotifications((prev) => {
+      const updated = prev.map((n) => ({ ...n, isRead: true }));
+      try {
+        localStorage.setItem(STORAGE_KEYS.NOTIFICATIONS, JSON.stringify(updated));
+      } catch {}
+      return updated;
+    });
+    showToast('✨ 所有星际通知已标为已读', 'success');
+  };
+
   // Keyboard shortcut Ctrl+K
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -167,11 +328,19 @@ export const ForumProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
-  const addTopic = (title: string, categorySlug: string, tags: string[], content: string): Topic => {
+  // Real Add Topic to D1
+  const addTopic = (
+    title: string,
+    categorySlug: string,
+    tags: string[],
+    content: string
+  ): Topic => {
     const cat = categories.find((c) => c.slug === categorySlug) || categories[1];
     const now = new Date().toISOString();
+    const tempId = `topic-${Date.now()}`;
+
     const newTopic: Topic = {
-      id: `topic-${Date.now()}`,
+      id: tempId,
       title,
       category: cat,
       tags: tags.length > 0 ? tags : ['讨论'],
@@ -191,18 +360,52 @@ export const ForumProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       reactions: [],
     };
 
+    // Optimistic UI
     setTopics((prev) => [newTopic, ...prev]);
+    showToast('🚀 话题发布成功！正在同步至 Cloudflare D1 星际数据库...', 'success');
+
+    fetch('/api/topics', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        title,
+        categorySlug,
+        tags,
+        content,
+        authorId: currentUser.id,
+      }),
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success && data.topic) {
+          setTopics((prev) => prev.map((t) => (t.id === tempId ? data.topic : t)));
+          showToast('✅ 猎户座 D1 全网节点同步完成！全终端可实时访问', 'success');
+        }
+      })
+      .catch((err) => {
+        console.warn('Backend sync failed, saved locally:', err);
+      });
+
     return newTopic;
   };
 
-  const addReply = (topicId: string, content: string, replyToUser?: string, replyToContent?: string) => {
+  // Real Add Reply to D1
+  const addReply = async (
+    topicId: string,
+    content: string,
+    replyToUser?: string,
+    replyToContent?: string
+  ) => {
     const now = new Date().toISOString();
+    const tempReplyId = `reply-${Date.now()}`;
+
+    // Optimistic update
     setTopics((prev) =>
       prev.map((t) => {
         if (t.id === topicId) {
           const nextFloor = t.replies.length + 2;
           const newReply: Reply = {
-            id: `reply-${Date.now()}`,
+            id: tempReplyId,
             topicId,
             floorNumber: nextFloor,
             author: currentUser,
@@ -229,9 +432,43 @@ export const ForumProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         return t;
       })
     );
+    showToast('💬 回复已发表，正在入轨 Cloudflare D1...', 'success');
+
+    try {
+      const res = await fetch(`/api/topics/${topicId}/replies`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          content,
+          authorId: currentUser.id,
+          replyToUser,
+          replyToContent,
+        }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success && data.reply) {
+          setTopics((prev) =>
+            prev.map((t) => {
+              if (t.id === topicId) {
+                return {
+                  ...t,
+                  replies: t.replies.map((r) => (r.id === tempReplyId ? data.reply : r)),
+                };
+              }
+              return t;
+            })
+          );
+          showToast('✅ 回复已持久化至星云节点', 'success');
+        }
+      }
+    } catch (e) {
+      console.warn('Reply D1 sync error:', e);
+    }
   };
 
-  const toggleLikeTopic = (topicId: string) => {
+  // Real Toggle Like Topic
+  const toggleLikeTopic = async (topicId: string) => {
     setTopics((prev) =>
       prev.map((t) => {
         if (t.id === topicId) {
@@ -245,15 +482,51 @@ export const ForumProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         return t;
       })
     );
+
+    try {
+      const res = await fetch(`/api/topics/${topicId}/like`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: currentUser.id }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success) {
+          setTopics((prev) =>
+            prev.map((t) => (t.id === topicId ? { ...t, isLiked: data.isLiked, likes: data.likes } : t))
+          );
+        }
+      }
+    } catch (e) {
+      console.warn('Topic like error:', e);
+    }
   };
 
-  const toggleBookmarkTopic = (topicId: string) => {
+  // Real Toggle Bookmark
+  const toggleBookmarkTopic = async (topicId: string) => {
     setTopics((prev) =>
       prev.map((t) => (t.id === topicId ? { ...t, isBookmarked: !t.isBookmarked } : t))
     );
+
+    try {
+      const res = await fetch(`/api/topics/${topicId}/bookmark`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: currentUser.id }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success) {
+          showToast(data.isBookmarked ? '⭐ 话题已加入星标书签' : '已取消书签收藏', 'info');
+        }
+      }
+    } catch (e) {
+      console.warn('Bookmark error:', e);
+    }
   };
 
-  const toggleLikeReply = (topicId: string, replyId: string) => {
+  // Real Toggle Like Reply
+  const toggleLikeReply = async (topicId: string, replyId: string) => {
     setTopics((prev) =>
       prev.map((t) => {
         if (t.id === topicId) {
@@ -275,27 +548,38 @@ export const ForumProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         return t;
       })
     );
+
+    try {
+      await fetch(`/api/replies/${replyId}/like`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: currentUser.id }),
+      });
+    } catch (e) {
+      console.warn('Reply like error:', e);
+    }
   };
 
-  const toggleReactionTopic = (topicId: string, emoji: string) => {
+  // Real Toggle Reaction Topic
+  const toggleReactionTopic = async (topicId: string, emoji: string) => {
     setTopics((prev) =>
       prev.map((t) => {
         if (t.id === topicId) {
           const existing = t.reactions || [];
-          const reactionIndex = existing.findIndex((r) => r.emoji === emoji);
+          const rxIdx = existing.findIndex((r) => r.emoji === emoji);
           let updated: typeof existing;
-          if (reactionIndex > -1) {
-            const current = existing[reactionIndex];
+          if (rxIdx > -1) {
+            const current = existing[rxIdx];
             const hasUser = current.users.includes(currentUser.id);
             if (hasUser) {
               const newUsers = current.users.filter((id) => id !== currentUser.id);
               updated = existing.map((r, i) =>
-                i === reactionIndex ? { ...r, count: Math.max(0, r.count - 1), users: newUsers } : r
+                i === rxIdx ? { ...r, count: Math.max(0, r.count - 1), users: newUsers } : r
               );
             } else {
               const newUsers = [...current.users, currentUser.id];
               updated = existing.map((r, i) =>
-                i === reactionIndex ? { ...r, count: r.count + 1, users: newUsers } : r
+                i === rxIdx ? { ...r, count: r.count + 1, users: newUsers } : r
               );
             }
           } else {
@@ -306,9 +590,28 @@ export const ForumProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         return t;
       })
     );
+
+    try {
+      const res = await fetch(`/api/topics/${topicId}/reactions`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ emoji, userId: currentUser.id }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success && data.reactions) {
+          setTopics((prev) =>
+            prev.map((t) => (t.id === topicId ? { ...t, reactions: data.reactions } : t))
+          );
+        }
+      }
+    } catch (e) {
+      console.warn('Topic reaction error:', e);
+    }
   };
 
-  const toggleReactionReply = (topicId: string, replyId: string, emoji: string) => {
+  // Real Toggle Reaction Reply
+  const toggleReactionReply = async (topicId: string, replyId: string, emoji: string) => {
     setTopics((prev) =>
       prev.map((t) => {
         if (t.id === topicId) {
@@ -317,22 +620,20 @@ export const ForumProvider: React.FC<{ children: React.ReactNode }> = ({ childre
             replies: t.replies.map((r) => {
               if (r.id === replyId) {
                 const existing = r.reactions || [];
-                const reactionIndex = existing.findIndex((rx) => rx.emoji === emoji);
+                const rxIdx = existing.findIndex((rx) => rx.emoji === emoji);
                 let updated: typeof existing;
-                if (reactionIndex > -1) {
-                  const current = existing[reactionIndex];
+                if (rxIdx > -1) {
+                  const current = existing[rxIdx];
                   const hasUser = current.users.includes(currentUser.id);
                   if (hasUser) {
                     const newUsers = current.users.filter((id) => id !== currentUser.id);
                     updated = existing.map((rx, i) =>
-                      i === reactionIndex
-                        ? { ...rx, count: Math.max(0, rx.count - 1), users: newUsers }
-                        : rx
+                      i === rxIdx ? { ...rx, count: Math.max(0, rx.count - 1), users: newUsers } : rx
                     );
                   } else {
                     const newUsers = [...current.users, currentUser.id];
                     updated = existing.map((rx, i) =>
-                      i === reactionIndex ? { ...rx, count: rx.count + 1, users: newUsers } : rx
+                      i === rxIdx ? { ...rx, count: rx.count + 1, users: newUsers } : rx
                     );
                   }
                 } else {
@@ -347,6 +648,73 @@ export const ForumProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         return t;
       })
     );
+
+    try {
+      const res = await fetch(`/api/replies/${replyId}/reactions`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ emoji, userId: currentUser.id }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success && data.reactions) {
+          setTopics((prev) =>
+            prev.map((t) => {
+              if (t.id === topicId) {
+                return {
+                  ...t,
+                  replies: t.replies.map((r) => (r.id === replyId ? { ...r, reactions: data.reactions } : r)),
+                };
+              }
+              return t;
+            })
+          );
+        }
+      }
+    } catch (e) {
+      console.warn('Reply reaction error:', e);
+    }
+  };
+
+  // Update user profile in D1
+  const updateUserProfile = async (updates: Partial<User>) => {
+    const updated = { ...currentUser, ...updates };
+    setCurrentUser(updated);
+    try {
+      localStorage.setItem(STORAGE_KEYS.CURRENT_USER, JSON.stringify(updated));
+    } catch {}
+
+    showToast('🪐 星际通行证档案更新中...', 'info');
+
+    try {
+      const res = await fetch('/api/users', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: currentUser.id,
+          name: updates.name,
+          avatar: updates.avatar,
+          bio: updates.bio,
+          location: updates.location,
+          website: updates.website,
+        }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success && data.user) {
+          setCurrentUser(data.user);
+          showToast('✅ 档案已成功同步至猎户座星网！', 'success');
+        }
+      }
+    } catch {
+      showToast('⚠️ 档案已本地保存，将在下次重试同步', 'warning');
+    }
+  };
+
+  const refreshTopics = async () => {
+    showToast('🔄 正在同步全星域最新轨道数据...', 'info');
+    await fetchD1Topics();
+    showToast('✨ 星河动态已刷新至最新引力波！', 'success');
   };
 
   const generateAiSummary = async (topicId: string): Promise<string> => {
@@ -354,16 +722,26 @@ export const ForumProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     if (!topic) return '';
     if (topic.aiSummary) return topic.aiSummary;
 
-    await new Promise((res) => setTimeout(res, 600));
+    await new Promise((res) => setTimeout(res, 500));
 
-    const summary = `【Orion AI 智能速读】
-1. **议题背景**：围绕《${topic.title}》展开深度技术交流，楼主 @${topic.author.name} 分享了实践痛点与方案。
+    const summary = `【Orion 猎户座 AI 智能速读】
+1. **议题背景**：围绕《${topic.title}》展开深度技术交流，楼主 @${topic.author.name} 提出了关键思考与落地实践方案。
 2. **社区共鸣**：已有 ${topic.replies.length} 位星友发表了专业见解，提炼出可靠性优先、注重网络与协议边界等关键经验。
-3. **速览建议**：直接查看文中配置段落，可配合 Docker 与 Linux 内核优化脚本快速上手。`;
+3. **速览建议**：直接查看文中配置段落，配合社区推荐参数即可快速验证调优。`;
 
     setTopics((prev) =>
       prev.map((t) => (t.id === topicId ? { ...t, aiSummary: summary } : t))
     );
+
+    // Save summary to D1
+    try {
+      fetch(`/api/topics/${topicId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ aiSummary: summary }),
+      });
+    } catch {}
+
     return summary;
   };
 
@@ -435,6 +813,19 @@ export const ForumProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         setIsSearchModalOpen,
         isUserSwitcherOpen,
         setIsUserSwitcherOpen,
+        isNotificationsOpen,
+        setIsNotificationsOpen,
+        isChatDrawerOpen,
+        setIsChatDrawerOpen,
+        isLevelMatrixOpen,
+        setIsLevelMatrixOpen,
+        viewingUser,
+        setViewingUser,
+        notifications,
+        markAllNotificationsRead,
+        toasts,
+        showToast,
+        removeToast,
         addTopic,
         addReply,
         toggleLikeTopic,
@@ -442,9 +833,12 @@ export const ForumProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         toggleLikeReply,
         toggleReactionTopic,
         toggleReactionReply,
+        updateUserProfile,
+        refreshTopics,
         generateAiSummary,
         filteredTopics,
         activeTopic,
+        isLoading,
       }}
     >
       {children}

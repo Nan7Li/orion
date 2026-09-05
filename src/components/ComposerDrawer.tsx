@@ -28,6 +28,7 @@ export const ComposerDrawer: React.FC = () => {
     categories,
     addTopic,
     setActiveTopicId,
+    showToast,
   } = useForum();
 
   const [title, setTitle] = useState('');
@@ -81,7 +82,7 @@ export const ComposerDrawer: React.FC = () => {
   const handleSubmit = (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     if (!title.trim() || !content.trim()) {
-      alert('请填写话题标题与正文内容');
+      showToast('请填写话题标题与正文内容', 'warning');
       return;
     }
 

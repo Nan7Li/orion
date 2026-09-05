@@ -38,6 +38,7 @@ export const TopicDetail: React.FC = () => {
     generateAiSummary,
     setSelectedCategory,
     currentUser,
+    showToast,
   } = useForum();
 
   const [replyContent, setReplyContent] = useState('');
@@ -54,9 +55,10 @@ export const TopicDetail: React.FC = () => {
     try {
       await navigator.clipboard.writeText(window.location.href);
       setShareCopied(true);
+      showToast('🔗 星际议题永久链接已复制到剪贴板！', 'success');
       setTimeout(() => setShareCopied(false), 2000);
     } catch {
-      // fallback
+      showToast('无法访问剪贴板，请手动复制浏览器地址栏', 'warning');
     }
   };
 
