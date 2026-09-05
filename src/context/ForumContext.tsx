@@ -25,11 +25,13 @@ interface ForumContextType {
   setCurrentUser: (user: User | null) => void;
   isLoggedIn: boolean;
   isAuthModalOpen: boolean;
-  setIsAuthModalOpen: (open: boolean, tab?: 'login' | 'register') => void;
-  authModalTab: 'login' | 'register';
-  setAuthModalTab: (tab: 'login' | 'register') => void;
+  setIsAuthModalOpen: (open: boolean, tab?: 'login' | 'register' | 'forgot') => void;
+  authModalTab: 'login' | 'register' | 'forgot';
+  setAuthModalTab: (tab: 'login' | 'register' | 'forgot') => void;
   login: (username: string, password: string) => Promise<{ success: boolean; error?: string }>;
   register: (username: string, name: string, password: string, email?: string) => Promise<{ success: boolean; error?: string }>;
+  forgotPassword: (email: string) => Promise<{ success: boolean; message?: string; code?: string; username?: string; name?: string; error?: string }>;
+  resetPassword: (email: string, code: string, newPassword: string) => Promise<{ success: boolean; error?: string }>;
   logout: () => void;
   users: User[];
   categories: Category[];
@@ -153,7 +155,7 @@ export const ForumProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [isChatDrawerOpen, setIsChatDrawerOpen] = useState<boolean>(false);
   const [isLevelMatrixOpen, setIsLevelMatrixOpen] = useState<boolean>(false);
   const [isAuthModalOpen, setIsAuthModalOpenState] = useState<boolean>(false);
-  const [authModalTab, setAuthModalTab] = useState<'login' | 'register'>('login');
+  const [authModalTab, setAuthModalTab] = useState<'login' | 'register' | 'forgot'>('login');
   const [viewingUser, setViewingUser] = useState<User | null>(null);
   const [notifications, setNotifications] = useState<ForumNotification[]>(INITIAL_NOTIFICATIONS);
   const [toasts, setToasts] = useState<ToastItem[]>([]);
@@ -171,7 +173,7 @@ export const ForumProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     setToasts((prev) => prev.filter((t) => t.id !== id));
   }, []);
 
-  const setIsAuthModalOpen = useCallback((open: boolean, tab: 'login' | 'register' = 'login') => {
+  const setIsAuthModalOpen = useCallback((open: boolean, tab: 'login' | 'register' | 'forgot' = 'login') => {
     setAuthModalTab(tab);
     setIsAuthModalOpenState(open);
   }, []);
@@ -364,6 +366,65 @@ export const ForumProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         return { success: true };
       } else {
         return { success: false, error: data.error || '注册失败' };
+      }
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : '网络连接失败';
+      return { success: false, error: msg };
+    }
+  };
+
+  // Auth: Forgot Password / Account Recovery
+  const forgotPassword = async (
+    email: string
+  ): Promise<{ success: boolean; message?: string; code?: string; username?: string; name?: string; error?: string }> => {
+    try {
+      const res = await fetch('/api/auth/forgot-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        return {
+          success: true,
+          message: data.message,
+          code: data.code,
+          username: data.username,
+          name: data.name,
+        };
+      } else {
+        return { success: false, error: data.error || '请求找回账号失败' };
+      }
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : '网络连接失败';
+      return { success: false, error: msg };
+    }
+  };
+
+  // Auth: Reset Password
+  const resetPassword = async (
+    email: string,
+    code: string,
+    newPassword: string
+  ): Promise<{ success: boolean; error?: string }> => {
+    try {
+      const res = await fetch('/api/auth/reset-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, code, newPassword }),
+      });
+      const data = await res.json();
+      if (res.ok && data.success && data.user) {
+        setCurrentUser(data.user);
+        try {
+          localStorage.setItem(STORAGE_KEYS.CURRENT_USER, JSON.stringify(data.user));
+          if (data.token) localStorage.setItem(STORAGE_KEYS.AUTH_TOKEN, data.token);
+        } catch {}
+        showToast(data.message || '🎉 通行密钥重置成功！已为您登入星舰网络', 'success');
+        fetchD1Topics(data.user.id);
+        return { success: true };
+      } else {
+        return { success: false, error: data.error || '重置密钥失败' };
       }
     } catch (err) {
       const msg = err instanceof Error ? err.message : '网络连接失败';
@@ -948,6 +1009,8 @@ export const ForumProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         setAuthModalTab,
         login,
         register,
+        forgotPassword,
+        resetPassword,
         logout,
         users,
         categories,

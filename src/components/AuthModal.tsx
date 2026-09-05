@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useForum } from '@/context/ForumContext';
 import {
   X,
@@ -14,6 +14,10 @@ import {
   Loader2,
   Rocket,
   ShieldCheck,
+  KeyRound,
+  CheckCircle2,
+  ArrowLeft,
+  Send,
 } from 'lucide-react';
 
 export const AuthModal: React.FC = () => {
@@ -24,6 +28,9 @@ export const AuthModal: React.FC = () => {
     setAuthModalTab,
     login,
     register,
+    forgotPassword,
+    resetPassword,
+    showToast,
   } = useForum();
 
   // Login inputs
@@ -36,15 +43,36 @@ export const AuthModal: React.FC = () => {
   const [regPassword, setRegPassword] = useState('');
   const [regEmail, setRegEmail] = useState('');
 
+  // Forgot / Reset inputs
+  const [forgotEmail, setForgotEmail] = useState('');
+  const [resetCode, setResetCode] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [codeSent, setCodeSent] = useState(false);
+  const [codeCountdown, setCodeCountdown] = useState(0);
+  const [discoveredAccount, setDiscoveredAccount] = useState<{ username: string; name: string } | null>(null);
+
   // Status
   const [isLoading, setIsLoading] = useState(false);
+  const [isSendingCode, setIsSendingCode] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [successInfo, setSuccessInfo] = useState<string | null>(null);
+
+  // Countdown timer for resend code
+  useEffect(() => {
+    if (codeCountdown <= 0) return;
+    const timer = setInterval(() => {
+      setCodeCountdown((prev) => prev - 1);
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [codeCountdown]);
 
   if (!isAuthModalOpen) return null;
 
   const handleLoginSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage(null);
+    setSuccessInfo(null);
     setIsLoading(true);
 
     try {
@@ -64,6 +92,7 @@ export const AuthModal: React.FC = () => {
   const handleRegisterSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage(null);
+    setSuccessInfo(null);
     setIsLoading(true);
 
     try {
@@ -76,6 +105,76 @@ export const AuthModal: React.FC = () => {
         setRegEmail('');
       } else {
         setErrorMessage(res.error || '注册失败');
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleSendCode = async () => {
+    if (!forgotEmail || !forgotEmail.trim()) {
+      setErrorMessage('请输入注册时绑定的电子邮箱');
+      return;
+    }
+    setErrorMessage(null);
+    setIsSendingCode(true);
+
+    try {
+      const res = await forgotPassword(forgotEmail.trim());
+      if (res.success) {
+        setCodeSent(true);
+        setCodeCountdown(60);
+        if (res.code) {
+          setResetCode(res.code); // Autofill for convenience & testing
+        }
+        if (res.username) {
+          setDiscoveredAccount({ username: res.username, name: res.name || res.username });
+        }
+        setSuccessInfo(
+          res.code
+            ? `星际重置验证码已生成！(测试模拟验证码: ${res.code}，已为您自动填充)`
+            : '重置验证码已发送至您的电子邮箱，请查收！'
+        );
+        showToast('重置验证码已就绪', 'success');
+      } else {
+        setErrorMessage(res.error || '未找到该邮箱关联的星舰账号');
+      }
+    } finally {
+      setIsSendingCode(false);
+    }
+  };
+
+  const handleResetSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setErrorMessage(null);
+
+    if (!resetCode.trim()) {
+      setErrorMessage('请输入 6 位重置验证码');
+      return;
+    }
+
+    if (newPassword.length < 6) {
+      setErrorMessage('新通行密钥长度不得少于 6 位');
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      setErrorMessage('两次输入的新密码不一致');
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const res = await resetPassword(forgotEmail.trim(), resetCode.trim(), newPassword);
+      if (res.success) {
+        setIsAuthModalOpen(false);
+        setForgotEmail('');
+        setResetCode('');
+        setNewPassword('');
+        setConfirmPassword('');
+        setCodeSent(false);
+      } else {
+        setErrorMessage(res.error || '重置密码失败');
       }
     } finally {
       setIsLoading(false);
@@ -112,7 +211,11 @@ export const AuthModal: React.FC = () => {
                   DO
                 </span>
               </h2>
-              <p className="text-xs text-zinc-400 mt-0.5">猎户座开发者星河 · 通行证验证中心</p>
+              <p className="text-xs text-zinc-400 mt-0.5">
+                {authModalTab === 'forgot'
+                  ? '星轨账号找回 · 密钥安全重置中心'
+                  : '猎户座开发者星河 · 通行证验证中心'}
+              </p>
             </div>
           </div>
 
@@ -131,6 +234,7 @@ export const AuthModal: React.FC = () => {
             onClick={() => {
               setAuthModalTab('login');
               setErrorMessage(null);
+              setSuccessInfo(null);
             }}
             className={`flex-1 py-2.5 text-xs font-bold rounded-2xl transition-all flex items-center justify-center space-x-1.5 ${
               authModalTab === 'login'
@@ -139,13 +243,15 @@ export const AuthModal: React.FC = () => {
             }`}
           >
             <LogIn className="w-3.5 h-3.5" />
-            <span>航行登入 (Sign In)</span>
+            <span>航行登入</span>
           </button>
+
           <button
             type="button"
             onClick={() => {
               setAuthModalTab('register');
               setErrorMessage(null);
+              setSuccessInfo(null);
             }}
             className={`flex-1 py-2.5 text-xs font-bold rounded-2xl transition-all flex items-center justify-center space-x-1.5 ${
               authModalTab === 'register'
@@ -154,7 +260,24 @@ export const AuthModal: React.FC = () => {
             }`}
           >
             <UserPlus className="w-3.5 h-3.5" />
-            <span>跃迁注册 (Sign Up)</span>
+            <span>跃迁注册</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              setAuthModalTab('forgot');
+              setErrorMessage(null);
+              setSuccessInfo(null);
+            }}
+            className={`flex-1 py-2.5 text-xs font-bold rounded-2xl transition-all flex items-center justify-center space-x-1.5 ${
+              authModalTab === 'forgot'
+                ? 'bg-white dark:bg-zinc-800 text-indigo-600 dark:text-indigo-400 shadow-xs'
+                : 'text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200'
+            }`}
+          >
+            <KeyRound className="w-3.5 h-3.5" />
+            <span>找回账号</span>
           </button>
         </div>
 
@@ -166,31 +289,55 @@ export const AuthModal: React.FC = () => {
           </div>
         )}
 
+        {/* Success banner */}
+        {successInfo && (
+          <div className="mx-6 mt-4 p-3 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 text-xs flex items-center space-x-2 animate-in fade-in">
+            <CheckCircle2 className="w-4 h-4 flex-shrink-0" />
+            <span className="leading-relaxed">{successInfo}</span>
+          </div>
+        )}
+
         {/* Content */}
         <div className="p-6">
           {authModalTab === 'login' ? (
-            /* Login Form */
+            /* Login Form (Supports Email or Username Login) */
             <form onSubmit={handleLoginSubmit} className="space-y-4 text-xs">
               <div className="space-y-1.5">
                 <label className="font-bold text-zinc-700 dark:text-zinc-300 flex items-center space-x-1.5">
-                  <User className="w-3.5 h-3.5 text-zinc-400" />
-                  <span>星舰呼号 / 用户名 / 邮箱</span>
+                  <Mail className="w-3.5 h-3.5 text-indigo-500" />
+                  <span>电子邮箱 或 用户名 (Email / Username)</span>
                 </label>
                 <input
                   type="text"
                   value={loginUsername}
                   onChange={(e) => setLoginUsername(e.target.value)}
-                  placeholder="例如：nan7li 或 neo"
+                  placeholder="例如：nan7li@nan77a.com 或 nan7li"
                   className="w-full px-3.5 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800/60 text-zinc-900 dark:text-white placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/50"
                   required
                 />
               </div>
 
               <div className="space-y-1.5">
-                <label className="font-bold text-zinc-700 dark:text-zinc-300 flex items-center space-x-1.5">
-                  <Lock className="w-3.5 h-3.5 text-zinc-400" />
-                  <span>通行密钥 (密码)</span>
-                </label>
+                <div className="flex items-center justify-between">
+                  <label className="font-bold text-zinc-700 dark:text-zinc-300 flex items-center space-x-1.5">
+                    <Lock className="w-3.5 h-3.5 text-zinc-400" />
+                    <span>通行密钥 (密码)</span>
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setAuthModalTab('forgot');
+                      setErrorMessage(null);
+                      setSuccessInfo(null);
+                      if (loginUsername.includes('@')) {
+                        setForgotEmail(loginUsername);
+                      }
+                    }}
+                    className="text-[11px] font-semibold text-indigo-600 dark:text-indigo-400 hover:underline"
+                  >
+                    忘记密码 / 邮箱找回？
+                  </button>
+                </div>
                 <input
                   type="password"
                   value={loginPassword}
@@ -221,14 +368,21 @@ export const AuthModal: React.FC = () => {
 
               {/* Quick Fill Test Accounts */}
               <div className="pt-3 border-t border-zinc-100 dark:border-zinc-800/80">
-                <p className="text-[11px] text-zinc-400 mb-2 font-medium">⚡ 快捷填入体验账号（密码均为 orion123）：</p>
+                <p className="text-[11px] text-zinc-400 mb-2 font-medium">⚡ 快捷填入体验账号（支持用户名或邮箱登入）：</p>
                 <div className="flex flex-wrap gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => handleQuickFill('nan7li@nan77a.com')}
+                    className="px-2.5 py-1 rounded-lg bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 text-[11px] font-mono border border-indigo-500/20 hover:border-indigo-500/40 transition-colors"
+                  >
+                    ✉️ nan7li@nan77a.com (邮箱登入)
+                  </button>
                   <button
                     type="button"
                     onClick={() => handleQuickFill('nan7li')}
                     className="px-2.5 py-1 rounded-lg bg-zinc-100 dark:bg-zinc-800 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 text-zinc-700 dark:text-zinc-300 hover:text-indigo-600 dark:hover:text-indigo-400 text-[11px] transition-colors"
                   >
-                    nan7li (当前主账号)
+                    nan7li (用户名)
                   </button>
                   <button
                     type="button"
@@ -237,23 +391,16 @@ export const AuthModal: React.FC = () => {
                   >
                     neo (Lv.4 主权官)
                   </button>
-                  <button
-                    type="button"
-                    onClick={() => handleQuickFill('cygnus')}
-                    className="px-2.5 py-1 rounded-lg bg-zinc-100 dark:bg-zinc-800 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 text-zinc-700 dark:text-zinc-300 hover:text-indigo-600 dark:hover:text-indigo-400 text-[11px] transition-colors"
-                  >
-                    cygnus (Lv.3 守望者)
-                  </button>
                 </div>
               </div>
             </form>
-          ) : (
+          ) : authModalTab === 'register' ? (
             /* Register Form */
             <form onSubmit={handleRegisterSubmit} className="space-y-3.5 text-xs">
               <div className="space-y-1.5">
                 <label className="font-bold text-zinc-700 dark:text-zinc-300 flex items-center space-x-1.5">
                   <User className="w-3.5 h-3.5 text-zinc-400" />
-                  <span>星舰呼号 (唯一 Username，支持英文字母/数字)</span>
+                  <span>星舰呼号 (唯一 Username，英文字母/数字/下划线)</span>
                 </label>
                 <input
                   type="text"
@@ -261,6 +408,21 @@ export const AuthModal: React.FC = () => {
                   onChange={(e) => setRegUsername(e.target.value)}
                   placeholder="例如：orion_voyager"
                   pattern="[a-zA-Z0-9_-]+"
+                  className="w-full px-3.5 py-2 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800/60 text-zinc-900 dark:text-white placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/50"
+                  required
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="font-bold text-zinc-700 dark:text-zinc-300 flex items-center space-x-1.5">
+                  <Mail className="w-3.5 h-3.5 text-indigo-500" />
+                  <span>绑定电子邮箱 (重要：用于邮箱登入与找回密码)</span>
+                </label>
+                <input
+                  type="email"
+                  value={regEmail}
+                  onChange={(e) => setRegEmail(e.target.value)}
+                  placeholder="yourname@example.com"
                   className="w-full px-3.5 py-2 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800/60 text-zinc-900 dark:text-white placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/50"
                   required
                 />
@@ -289,24 +451,10 @@ export const AuthModal: React.FC = () => {
                   type="password"
                   value={regPassword}
                   onChange={(e) => setRegPassword(e.target.value)}
-                  placeholder="输入至少 6 位的密码..."
+                  placeholder="输入至少 6 位的访问密码..."
                   minLength={6}
                   className="w-full px-3.5 py-2 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800/60 text-zinc-900 dark:text-white placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/50"
                   required
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="font-bold text-zinc-700 dark:text-zinc-300 flex items-center space-x-1.5">
-                  <Mail className="w-3.5 h-3.5 text-zinc-400" />
-                  <span>电子信箱 (选填，用于接收高引力提醒)</span>
-                </label>
-                <input
-                  type="email"
-                  value={regEmail}
-                  onChange={(e) => setRegEmail(e.target.value)}
-                  placeholder="yourname@example.com"
-                  className="w-full px-3.5 py-2 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800/60 text-zinc-900 dark:text-white placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/50"
                 />
               </div>
 
@@ -320,7 +468,7 @@ export const AuthModal: React.FC = () => {
 
               <button
                 type="submit"
-                disabled={isLoading || !regUsername.trim() || regPassword.length < 6}
+                disabled={isLoading || !regUsername.trim() || !regEmail.trim() || regPassword.length < 6}
                 className="w-full py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40 text-white font-bold transition-all shadow-md shadow-indigo-600/30 flex items-center justify-center space-x-2"
               >
                 {isLoading ? (
@@ -335,6 +483,138 @@ export const AuthModal: React.FC = () => {
                   </>
                 )}
               </button>
+            </form>
+          ) : (
+            /* Forgot Password & Account Recovery Form */
+            <form onSubmit={handleResetSubmit} className="space-y-4 text-xs">
+              {/* Step 1: Input registered email to locate account & request code */}
+              <div className="space-y-1.5">
+                <label className="font-bold text-zinc-700 dark:text-zinc-300 flex items-center space-x-1.5">
+                  <Mail className="w-3.5 h-3.5 text-indigo-500" />
+                  <span>注册时绑定的电子邮箱</span>
+                </label>
+                <div className="flex space-x-2">
+                  <input
+                    type="email"
+                    value={forgotEmail}
+                    onChange={(e) => setForgotEmail(e.target.value)}
+                    placeholder="例如：nan7li@nan77a.com"
+                    disabled={codeSent && codeCountdown > 0}
+                    className="flex-1 px-3.5 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800/60 text-zinc-900 dark:text-white placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/50"
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={handleSendCode}
+                    disabled={isSendingCode || !forgotEmail.trim() || codeCountdown > 0}
+                    className="px-3.5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white font-bold transition-colors flex items-center space-x-1.5 flex-shrink-0"
+                  >
+                    {isSendingCode ? (
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    ) : (
+                      <Send className="w-3.5 h-3.5" />
+                    )}
+                    <span>{codeCountdown > 0 ? `${codeCountdown}s 后重发` : '获取验证码'}</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Found account hint */}
+              {discoveredAccount && (
+                <div className="p-3 rounded-xl bg-purple-500/10 border border-purple-500/20 text-purple-700 dark:text-purple-300 text-xs flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <User className="w-4 h-4 text-purple-500 flex-shrink-0" />
+                    <span>
+                      已匹配星舰呼号：<strong className="font-mono">@{discoveredAccount.username}</strong> ({discoveredAccount.name})
+                    </span>
+                  </div>
+                </div>
+              )}
+
+              {/* Step 2: Input 6-digit code */}
+              <div className="space-y-1.5">
+                <label className="font-bold text-zinc-700 dark:text-zinc-300 flex items-center space-x-1.5">
+                  <KeyRound className="w-3.5 h-3.5 text-zinc-400" />
+                  <span>6 位安全验证码 (Valid for 15 mins)</span>
+                </label>
+                <input
+                  type="text"
+                  maxLength={6}
+                  value={resetCode}
+                  onChange={(e) => setResetCode(e.target.value.trim())}
+                  placeholder="输入邮件中的 6 位数字验证码"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800/60 text-zinc-900 dark:text-white placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 font-mono tracking-wider text-sm"
+                  required
+                />
+              </div>
+
+              {/* Step 3: New Password */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                <div className="space-y-1.5">
+                  <label className="font-bold text-zinc-700 dark:text-zinc-300 flex items-center space-x-1.5">
+                    <Lock className="w-3.5 h-3.5 text-zinc-400" />
+                    <span>新通行密钥</span>
+                  </label>
+                  <input
+                    type="password"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    placeholder="至少 6 位新密码"
+                    minLength={6}
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800/60 text-zinc-900 dark:text-white placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/50"
+                    required
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="font-bold text-zinc-700 dark:text-zinc-300 flex items-center space-x-1.5">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-zinc-400" />
+                    <span>确认新密钥</span>
+                  </label>
+                  <input
+                    type="password"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    placeholder="再次输入新密码"
+                    minLength={6}
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800/60 text-zinc-900 dark:text-white placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/50"
+                    required
+                  />
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                disabled={isLoading || !forgotEmail.trim() || !resetCode.trim() || newPassword.length < 6}
+                className="w-full py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40 text-white font-bold transition-all shadow-md shadow-indigo-600/30 flex items-center justify-center space-x-2 mt-2"
+              >
+                {isLoading ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span>正在重置 D1 密钥并登入...</span>
+                  </>
+                ) : (
+                  <>
+                    <CheckCircle2 className="w-4 h-4" />
+                    <span>重置密钥并登入星舰</span>
+                  </>
+                )}
+              </button>
+
+              <div className="text-center pt-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setAuthModalTab('login');
+                    setErrorMessage(null);
+                    setSuccessInfo(null);
+                  }}
+                  className="inline-flex items-center space-x-1 text-xs text-zinc-400 hover:text-indigo-500 transition-colors"
+                >
+                  <ArrowLeft className="w-3.5 h-3.5" />
+                  <span>想起密码了？返回登入</span>
+                </button>
+              </div>
             </form>
           )}
         </div>
