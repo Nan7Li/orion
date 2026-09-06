@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { Category, DisplayMode, Reply, Topic, User, ViewTab } from '@/types';
 import { CATEGORIES, INITIAL_TOPICS, INITIAL_USERS } from '@/data/initialData';
+import { collectDeviceFingerprint } from '@/utils/fingerprint';
 
 export interface ToastItem {
   id: string;
@@ -320,10 +321,14 @@ export const ForumProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     turnstileToken?: string
   ): Promise<{ success: boolean; error?: string }> => {
     try {
+      const fingerprint = await collectDeviceFingerprint();
       const res = await fetch('/api/auth/login', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password, turnstileToken }),
+        headers: {
+          'Content-Type': 'application/json',
+          'x-device-hash': fingerprint.deviceHash,
+        },
+        body: JSON.stringify({ username, password, turnstileToken, fingerprint }),
       });
       const data = await res.json();
       if (res.ok && data.success && data.user) {
@@ -353,10 +358,14 @@ export const ForumProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     turnstileToken?: string
   ): Promise<{ success: boolean; error?: string }> => {
     try {
+      const fingerprint = await collectDeviceFingerprint();
       const res = await fetch('/api/auth/register', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, name, password, email, turnstileToken }),
+        headers: {
+          'Content-Type': 'application/json',
+          'x-device-hash': fingerprint.deviceHash,
+        },
+        body: JSON.stringify({ username, name, password, email, turnstileToken, fingerprint }),
       });
       const data = await res.json();
       if (res.ok && data.success && data.user) {
