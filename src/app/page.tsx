@@ -8,7 +8,6 @@ import { TopicList } from '@/components/TopicList';
 import { TopicDetail } from '@/components/TopicDetail';
 import { ComposerDrawer } from '@/components/ComposerDrawer';
 import { SearchModal } from '@/components/SearchModal';
-import { UserSwitcherModal } from '@/components/UserSwitcherModal';
 import { NotificationDrawer } from '@/components/NotificationDrawer';
 import { UserProfileModal } from '@/components/UserProfileModal';
 import { LevelMatrixModal } from '@/components/LevelMatrixModal';
@@ -74,7 +73,6 @@ const ForumMain: React.FC = () => {
       {/* Global Interactive Overlays */}
       <ComposerDrawer />
       <SearchModal />
-      <UserSwitcherModal />
       <NotificationDrawer />
       <UserProfileModal />
       <LevelMatrixModal />

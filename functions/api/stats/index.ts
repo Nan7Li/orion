@@ -26,12 +26,12 @@ export const onRequestGet = async (context: { env: Env }) => {
       JSON.stringify({
         success: true,
         stats: {
-          totalTopics: (topicsCnt?.count || 0) + 136, // Add realistic base or show exact
+          totalTopics: topicsCnt?.count || 0,
           exactTopics: topicsCnt?.count || 0,
-          totalReplies: (repliesCnt?.count || 0) + 892,
+          totalReplies: repliesCnt?.count || 0,
           exactReplies: repliesCnt?.count || 0,
-          totalUsers: (usersCnt?.count || 0) + 2420,
-          onlineVoyagers: 18 + Math.floor(Math.random() * 7),
+          totalUsers: usersCnt?.count || 0,
+          onlineVoyagers: 1,
           pulsarFrequency: '1420.405 MHz',
         },
       }),

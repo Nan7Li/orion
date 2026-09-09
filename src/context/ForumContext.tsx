@@ -57,8 +57,6 @@ interface ForumContextType {
   setIsComposerOpen: (open: boolean) => void;
   isSearchModalOpen: boolean;
   setIsSearchModalOpen: (open: boolean) => void;
-  isUserSwitcherOpen: boolean;
-  setIsUserSwitcherOpen: (open: boolean) => void;
   isNotificationsOpen: boolean;
   setIsNotificationsOpen: (open: boolean) => void;
   isChatDrawerOpen: boolean;
@@ -99,47 +97,10 @@ const STORAGE_KEYS = {
   NOTIFICATIONS: 'orion_forum_notifications_v4',
 };
 
-const INITIAL_NOTIFICATIONS: ForumNotification[] = [
-  {
-    id: 'notif-1',
-    type: 'level_up',
-    title: '宇宙星阶晋升提醒',
-    content: '祝贺跃迁！你的星际引力值已达到 Lv.3【恒星守望者】，已解锁标签共治与精选推荐权。',
-    createdAt: '2024-09-05T18:00:00Z',
-    isRead: false,
-  },
-  {
-    id: 'notif-2',
-    type: 'reply',
-    title: 'Neo 回复了你的评论',
-    content: '“已为前排回帖的两位星友下发 Token，请进入个人控制台查收！”',
-    topicId: 'topic-4',
-    createdAt: '2024-09-04T14:00:00Z',
-    isRead: false,
-  },
-  {
-    id: 'notif-3',
-    type: 'like',
-    title: 'Cygnus_极客 点赞了你的发言',
-    content: '在话题《各大云厂商海外 VPS 线路全面实测》中获得了 1 次星际赞赏。',
-    topicId: 'topic-3',
-    createdAt: '2024-09-03T16:45:00Z',
-    isRead: true,
-  },
-  {
-    id: 'notif-4',
-    type: 'badge',
-    title: '获得星舰通标勋章',
-    content: '你已荣获【🌟 恒星守望者】与【🚀 探索先锋】勋章，已点亮星际通行证。',
-    createdAt: '2024-09-01T10:00:00Z',
-    isRead: true,
-  },
-];
-
 export const ForumProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [users, setUsers] = useState<User[]>(INITIAL_USERS);
   const [categories, setCategories] = useState<Category[]>(CATEGORIES);
-  const [currentUser, setCurrentUser] = useState<User | null>(INITIAL_USERS[5]); // Default logged in as Nan7Li
+  const [currentUser, setCurrentUser] = useState<User | null>(null); // Guest by default
   const [topics, setTopics] = useState<Topic[]>(INITIAL_TOPICS);
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
@@ -151,14 +112,13 @@ export const ForumProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [theme, setTheme] = useState<'dark' | 'light'>('dark');
   const [isComposerOpen, setIsComposerOpen] = useState<boolean>(false);
   const [isSearchModalOpen, setIsSearchModalOpen] = useState<boolean>(false);
-  const [isUserSwitcherOpen, setIsUserSwitcherOpen] = useState<boolean>(false);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState<boolean>(false);
   const [isChatDrawerOpen, setIsChatDrawerOpen] = useState<boolean>(false);
   const [isLevelMatrixOpen, setIsLevelMatrixOpen] = useState<boolean>(false);
   const [isAuthModalOpen, setIsAuthModalOpenState] = useState<boolean>(false);
   const [authModalTab, setAuthModalTab] = useState<'login' | 'register' | 'forgot'>('login');
   const [viewingUser, setViewingUser] = useState<User | null>(null);
-  const [notifications, setNotifications] = useState<ForumNotification[]>(INITIAL_NOTIFICATIONS);
+  const [notifications, setNotifications] = useState<ForumNotification[]>([]);
   const [toasts, setToasts] = useState<ToastItem[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
@@ -1049,8 +1009,6 @@ export const ForumProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         setIsComposerOpen,
         isSearchModalOpen,
         setIsSearchModalOpen,
-        isUserSwitcherOpen,
-        setIsUserSwitcherOpen,
         isNotificationsOpen,
         setIsNotificationsOpen,
         isChatDrawerOpen,

@@ -281,8 +281,8 @@ export const Sidebar: React.FC = () => {
         </div>
         <div className="grid grid-cols-2 gap-1.5 text-center text-xs">
           <div className="bg-white/80 dark:bg-zinc-900/80 p-1.5 rounded-xl border border-zinc-200/50 dark:border-zinc-800/50">
-            <div className="font-mono font-bold text-indigo-600 dark:text-indigo-400">486</div>
-            <div className="text-[10px] text-zinc-400">实时在轨</div>
+            <div className="font-mono font-bold text-indigo-600 dark:text-indigo-400">{users.length}</div>
+            <div className="text-[10px] text-zinc-400">注册探索者</div>
           </div>
           <div className="bg-white/80 dark:bg-zinc-900/80 p-1.5 rounded-xl border border-zinc-200/50 dark:border-zinc-800/50">
             <div className="font-mono font-bold text-emerald-600 dark:text-emerald-400">{topics.length}</div>

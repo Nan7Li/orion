@@ -13,8 +13,8 @@ interface CheckinState {
 export const DailyCheckinCard: React.FC = () => {
   const { currentUser, isLoggedIn, setIsAuthModalOpen, showToast } = useForum();
   const [isCheckedIn, setIsCheckedIn] = useState(false);
-  const [streak, setStreak] = useState(6);
-  const [energy, setEnergy] = useState(1240);
+  const [streak, setStreak] = useState(0);
+  const [energy, setEnergy] = useState(0);
   const [isAnimating, setIsAnimating] = useState(false);
 
   const getTodayStr = () => {
@@ -30,24 +30,24 @@ export const DailyCheckinCard: React.FC = () => {
         const data: CheckinState = JSON.parse(raw);
         if (data.lastDate === today) {
           setIsCheckedIn(true);
-          setStreak(data.streak || 7);
-          setEnergy(data.energy || 1255);
+          setStreak(data.streak || 1);
+          setEnergy(data.energy || 15);
         } else {
           // Check if streak broke (>1 day)
           const last = new Date(data.lastDate).getTime();
           const now = new Date(today).getTime();
           const diffDays = Math.round((now - last) / (1000 * 3600 * 24));
           if (diffDays === 1) {
-            setStreak(data.streak || 6);
+            setStreak(data.streak || 1);
           } else {
-            setStreak(1);
+            setStreak(0);
           }
-          setEnergy(data.energy || 1240);
+          setEnergy(data.energy || 0);
           setIsCheckedIn(false);
         }
       } else {
-        setStreak(6);
-        setEnergy(1240);
+        setStreak(0);
+        setEnergy(0);
         setIsCheckedIn(false);
       }
     } catch {}

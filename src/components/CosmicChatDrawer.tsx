@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { useForum } from '@/context/ForumContext';
-import { X, Send, Radio, Users } from 'lucide-react';
+import { X, Send, Radio } from 'lucide-react';
 import { getTrustLevelBadge } from './UserBadge';
 
 interface ChatMessage {
@@ -20,48 +20,39 @@ interface ChatMessage {
 
 const INITIAL_MESSAGES: ChatMessage[] = [
   {
-    id: 'msg-1',
+    id: 'msg-system',
     sender: {
-      id: 'user-neo',
-      name: 'Neo (星舰引航者)',
-      avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
+      id: 'system',
+      name: 'Orion 猎户座公频系统',
+      avatar: 'https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?w=150&auto=format&fit=crop&q=80',
       trustLevel: 4,
       trustTitle: '猎户座主权官',
     },
-    content: '欢迎进入猎户座星际公频！全网 D1 节点已连通。',
-    time: '20:15',
-  },
-  {
-    id: 'msg-2',
-    sender: {
-      id: 'user-cygnus',
-      name: 'Cygnus_极客',
-      avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150',
-      trustLevel: 3,
-      trustTitle: '恒星守望者',
-    },
-    content: '今天测试了 Claude 3.7 的思考流，延迟比想象中低不少！',
-    time: '20:42',
-  },
-  {
-    id: 'msg-3',
-    sender: {
-      id: 'user-linusfan',
-      name: '纯血运维漫游者',
-      avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150',
-      trustLevel: 2,
-      trustTitle: '行星领航员',
-    },
-    content: '德国 9929 节点晚高峰真稳，推荐自建服务的星友上车。',
-    time: '21:05',
+    content: '欢迎进入猎户座公频。真实探索者可在此自由交流技术经验、探讨边缘架构与星际见闻。',
+    time: '实时',
   },
 ];
 
 export const CosmicChatDrawer: React.FC = () => {
   const { isChatDrawerOpen, setIsChatDrawerOpen, currentUser, setIsAuthModalOpen } = useForum();
-  const [messages, setMessages] = useState<ChatMessage[]>(INITIAL_MESSAGES);
+  const [messages, setMessages] = useState<ChatMessage[]>(() => {
+    try {
+      const saved = localStorage.getItem('orion_chat_messages_v2');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch {}
+    return INITIAL_MESSAGES;
+  });
   const [input, setInput] = useState('');
   const endRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('orion_chat_messages_v2', JSON.stringify(messages));
+    } catch {}
+  }, [messages]);
 
   useEffect(() => {
     if (isChatDrawerOpen) {
@@ -121,8 +112,8 @@ export const CosmicChatDrawer: React.FC = () => {
               </div>
               <div className="flex items-center space-x-2 text-[11px] text-zinc-400">
                 <span className="flex items-center space-x-1">
-                  <Users className="w-3 h-3 text-emerald-400" />
-                  <span>24 位星友在线守候</span>
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                  <span>边缘多节点联通</span>
                 </span>
                 <span>·</span>
                 <span className="font-mono text-zinc-500">1420.405 MHz</span>

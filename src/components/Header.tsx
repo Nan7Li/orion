@@ -10,7 +10,6 @@ import {
   Moon,
   Sun,
   Bell,
-  Users,
   Layers,
   ChevronDown,
   Sparkles,
@@ -36,7 +35,6 @@ export const Header: React.FC = () => {
     setDisplayMode,
     setIsComposerOpen,
     setIsSearchModalOpen,
-    setIsUserSwitcherOpen,
     setIsNotificationsOpen,
     setIsChatDrawerOpen,
     setIsLevelMatrixOpen,
@@ -338,17 +336,6 @@ export const Header: React.FC = () => {
                       >
                         <Award className="w-3.5 h-3.5 text-amber-500" />
                         <span>宇宙星阶白皮书 (等级体系)</span>
-                      </button>
-
-                      <button
-                        onClick={() => {
-                          setShowUserDropdown(false);
-                          setIsUserSwitcherOpen(true);
-                        }}
-                        className="w-full flex items-center space-x-2 px-3 py-2 text-xs rounded-xl hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 transition-colors text-left"
-                      >
-                        <Users className="w-3.5 h-3.5 text-indigo-500" />
-                        <span>切换航行者身份 (测试各星阶)</span>
                       </button>
 
                       <div className="pt-1 border-t border-zinc-100 dark:border-zinc-800">
